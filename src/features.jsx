@@ -76,14 +76,16 @@ export function DYODPanel({supabase,lang='en',onOrder}) {
     {result&&<article className="dyod-result">
       <div className="eyebrow">{zh?'专属创作 · ACE BAR':'MADE JUST FOR YOU · ACE BAR'}</div>
       <div className="dyod-language"><button type="button" className={recipeLang==='en'?'active':''} onClick={()=>setRecipeLang('en')}>English</button><button type="button" className={recipeLang==='zh'?'active':''} onClick={()=>setRecipeLang('zh')}>中文</button></div>
-      {result.image_url&&<img className="dyod-drink-image" src={result.image_url} alt={recipeText(result.name_en||result.name,result.name_zh)}/>}
-      <h3>{recipeText(result.name_en||result.name,result.name_zh)}</h3><p>{recipeText(result.story_en||result.story,result.story_zh)}</p>
-      <h4>{recipeLang==='zh'?'配方材料':'Ingredients'}</h4>
-      <ul>{(result.ingredients||[]).map((i,n)=><li key={n}>{i.amount} {recipeText(i.name_en||i.name,i.name_zh)}</li>)}</ul>
-      <h4>{recipeLang==='zh'?'制作方法':'Method'}</h4><p>{recipeText(result.method_en||result.method,result.method_zh)}</p>
-      {(result.glassware_en||result.glassware)&&<p><b>{recipeLang==='zh'?'杯型':'Glassware'}:</b> {recipeText(result.glassware_en||result.glassware,result.glassware_zh)}</p>}
+      <div className="dyod-card-art">
+        {result.image_url?<img className="dyod-drink-image" src={result.image_url} alt={recipeText(result.name_en||result.name,result.name_zh)}/>:<div className="dyod-glass-art" aria-label={recipeLang==='zh'?'鸡尾酒装饰插画':'Cocktail illustration'}><span className="dyod-art-orbit orbit-one"/><span className="dyod-art-orbit orbit-two"/><svg viewBox="0 0 240 220" role="img" aria-hidden="true"><path d="M62 35h116l-16 93a42 42 0 0 1-84 0L62 35Z" fill="rgba(239,190,112,.22)" stroke="#e6c58b" strokeWidth="3"/><path d="M70 72h100l-8 50a42 42 0 0 1-84 0L70 72Z" fill="#b77b43" opacity=".85"/><path d="M120 170v25m-32 0h64" stroke="#e6c58b" strokeWidth="4" strokeLinecap="round"/><circle cx="164" cy="50" r="17" fill="#d9a64f"/><path d="M163 33q12-19 28-12-4 18-28 12Z" fill="#91a77b"/><path d="M50 91q-18-12-12-29 18 4 12 29Z" fill="#91a77b"/></svg><span className="dyod-art-caption">ACE BAR · YOUR SIGNATURE</span></div>}
+      </div>
+      <div className="dyod-card-copy"><div className="dyod-card-kicker">{recipeLang==='zh'?'为你调制 · 独一无二':'PERSONALIZED MIXOLOGY'}</div>
+      <h3>{recipeText(result.name_en||result.name,result.name_zh)}</h3><p className="dyod-story">{recipeText(result.story_en||result.story,result.story_zh)}</p>
+      <div className="dyod-tags"><span>{translations[answers.mood]||answers.mood}</span><span>{translations[answers.taste]||answers.taste}</span><span>{translations[answers.strength]||answers.strength}</span></div>
+      <div className="dyod-recipe-block"><h4>{recipeLang==='zh'?'配方材料':'INGREDIENTS'}</h4><ul>{(result.ingredients||[]).map((i,n)=><li key={n}><span>{recipeText(i.name_en||i.name,i.name_zh)}</span><b>{i.amount}</b></li>)}</ul></div>
+      <div className="dyod-recipe-block"><h4>{recipeLang==='zh'?'制作方法':'THE METHOD'}</h4><p>{recipeText(result.method_en||result.method,result.method_zh)}</p>{(result.glassware_en||result.glassware)&&<p className="dyod-glassware"><b>{recipeLang==='zh'?'建议杯型':'SERVE IN'}:</b> {recipeText(result.glassware_en||result.glassware,result.glassware_zh)}</p>}</div>
       <small>{recipeLang==='zh'?'请将配方展示给调酒师，实际供应情况以吧台为准。':'Show this recipe to your bartender. Final availability is confirmed at the bar.'}</small>
-      <button type="button" className="dyod-order" onClick={()=>onOrder?.({...result,display_language:recipeLang})}>{recipeLang==='zh'?'点这杯酒':'Order this drink'} →</button>
+      <button type="button" className="dyod-order" onClick={()=>onOrder?.({...result,display_language:recipeLang})}>{recipeLang==='zh'?'点这杯酒':'Order this drink'} →</button></div>
     </article>}
     <p className="dyod-footnote">{zh?'每次创作都会实时读取后台全部有货原料，并从中挑选合适搭配。':'Every creation reads the full, latest available inventory and selects a compatible combination.'}</p>
   </section>;
