@@ -107,3 +107,6 @@ body::before{
 .dyod-result .dyod-order{margin-top:20px;box-shadow:0 8px 18px rgba(23,59,42,.18)}
 .dyod-drink-image{max-height:340px;margin:0;width:100%;border-radius:0;object-fit:cover}
 @media(max-width:520px){.dyod-card-copy{padding:18px}.dyod-glass-art{min-height:220px}.dyod-glass-art svg{width:180px;height:180px}.dyod-result>.eyebrow,.dyod-result>.dyod-language{margin-left:18px;margin-right:18px}}
+
+
+.guest-name-bar{max-width:720px;margin:0 auto 22px;padding:16px 18px;border:1px solid rgba(178,145,86,.28);border-radius:16px;background:rgba(255,255,255,.72);display:flex;align-items:center;justify-content:space-between;gap:16px}.guest-name-bar label{display:flex;align-items:center;gap:12px;font-weight:600;color:var(--ink,#25352b);flex:1}.guest-name-bar input{max-width:260px;width:100%;border:1px solid rgba(70,90,70,.2);border-radius:10px;padding:10px 12px;font:inherit;background:#fff}.guest-name-bar small{color:#7d8178;font-size:12px}@media(max-width:620px){.guest-name-bar{align-items:stretch;flex-direction:column;gap:8px}.guest-name-bar label{align-items:stretch;flex-direction:column;gap:6px}.guest-name-bar input{max-width:none}}
