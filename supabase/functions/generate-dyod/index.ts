@@ -134,8 +134,28 @@ serve(async (req) => {
       console.warn("DYOD recipe did not pass independent review; refining:", finalReview);
     }
 
+    // Do not discard a usable, inventory-valid recipe solely because the
+    // heuristic reviewer is conservative or cannot confidently award 85+.
+    // Return it transparently for bartender review; never invent a passing score.
+    if (recipe && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
+      const score = Number(finalReview?.score);
+      const hasScore = Number.isFinite(score);
+      recipe.quality_score = hasScore ? score : null;
+      recipe.quality_review = {
+        passed: false,
+        needs_bartender_review: true,
+        issues: Array.isArray(finalReview?.issues) ? finalReview!.issues : ["Automated review could not confirm the quality threshold."]
+      };
+      return json({
+        recipe,
+        inventory_count: inventory.length,
+        quality_score: hasScore ? score : null,
+        quality_review: recipe.quality_review
+      });
+    }
+
     return json({
-      error: "I couldn't create a recipe that passed Ace Bar's balance and quality review using the current available stock. Please try again or adjust the guest preferences."
+      error: "I couldn't create a recipe using the current available stock. Please check that enough ingredients are marked available."
     }, 422);
   } catch (error) {
     console.error("DYOD generation error:", error);
