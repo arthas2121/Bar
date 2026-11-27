@@ -11,6 +11,7 @@ alter table public.staff_users enable row level security;
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   table_number text not null,
+  guest_name text,
   items jsonb not null,
   total numeric(10,2) not null check (total >= 0),
   status text not null default 'received' check (status in ('received','preparing','ready')),
@@ -114,3 +115,7 @@ create policy "Staff manage reservations"
 on public.bar_reservations for all to authenticated
 using (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active))
 with check (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active));
+
+
+-- Guest display name for identifying shared orders.
+alter table public.orders add column if not exists guest_name text;
