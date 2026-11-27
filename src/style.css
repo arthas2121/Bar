@@ -110,3 +110,8 @@ footer{color:#829084}
 .topactions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
 .topactions .lang{min-height:38px;white-space:nowrap;text-decoration:none;font-size:12px}
 @media(max-width:420px){.topactions{gap:6px}.topactions .lang{padding:8px 9px;font-size:11px}}
+
+.staff-order-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.clear-orders{border:1px solid #b65c50;background:#fff8f5;color:#9e4035;padding:9px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.clear-orders:disabled{opacity:.55;cursor:wait}
+@media(max-width:560px){.staff-order-tools{gap:6px}.clear-orders{font-size:11px;padding:8px 10px}}
