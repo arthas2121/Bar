@@ -55,7 +55,7 @@ export function DYODPanel({supabase,lang='en',onOrder}) {
         throw new Error(detail || fnError.message || (zh?'AI 服务请求失败，请稍后重试。':'The AI request failed. Please try again.'));
       }
       if(!data?.recipe) throw new Error(data?.error || (zh?'AI 没有返回配方，请检查库存和服务配置。':'The AI returned no recipe. Please check inventory and function settings.'));
-      setResult({...data.recipe,inventoryCount:data.inventory_count});
+      setResult({...data.recipe,inventoryCount:data.inventory_count,qualityScore:data.quality_score,qualityReview:data.quality_review});
       setArtVariant(Math.floor(Math.random()*barBackdrops.length));
       setRecipeLang(lang);
     } catch(err) {
