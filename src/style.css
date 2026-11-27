@@ -117,3 +117,9 @@ footer{color:#829084}
 @media(max-width:560px){.staff-order-tools{gap:6px}.clear-orders{font-size:11px;padding:8px 10px}}
 
 .order-select{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:#526b56;font-size:12px;font-weight:700}.order-select input{width:16px;height:16px;accent-color:#35563b}
+
+
+/* Make the per-ingredient edit action clearly visible */
+.inventory-row .inventory-edit-button{display:inline-flex!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:2!important;border:1px solid #244d34!important;background:#244d34!important;color:#fff!important;font-weight:700!important;padding:9px 13px!important;border-radius:7px!important;cursor:pointer!important}
+.inventory-edit-form{width:100%;flex:1 0 100%}
+.inventory-edit-form button{grid-column:auto}
