@@ -36,10 +36,27 @@ export function DYODPanel({supabase,lang='en'}) {
   const update=(key,value)=>setAnswers(a=>({...a,[key]:value}));
   const create=async()=>{
     setBusy(true);setError('');setResult(null);
-    if(!supabase){setError(zh?'暂时无法连接酒库。':'Could not connect to the bar inventory.');setBusy(false);return;}
-    const {data,error:fnError}=await supabase.functions.invoke('generate-dyod',{body:{answers}});
-    if(fnError||!data?.recipe){setError(data?.error || (zh?'AI 调酒师暂时不可用，请检查服务配置后重试。':'The AI bartender is unavailable. Please check its configuration and try again.'));setBusy(false);return;}
-    setResult({...data.recipe,inventoryCount:data.inventory_count});setBusy(false);
+    try {
+      if(!supabase) throw new Error(zh?'暂时无法连接酒库。':'Could not connect to the bar inventory.');
+      const {data,error:fnError}=await supabase.functions.invoke('generate-dyod',{body:{answers}});
+      if(fnError) {
+        let detail='';
+        try {
+          const payload=await fnError.context?.json();
+          detail=payload?.error || payload?.message || '';
+          if(payload?.status) detail += (detail?' ':'') + '(HTTP '+payload.status+')';
+          if(payload?.code) detail += (detail?' ':'') + '('+payload.code+')';
+        } catch {}
+        throw new Error(detail || fnError.message || (zh?'AI 服务请求失败，请稍后重试。':'The AI request failed. Please try again.'));
+      }
+      if(!data?.recipe) throw new Error(data?.error || (zh?'AI 没有返回配方，请检查库存和服务配置。':'The AI returned no recipe. Please check inventory and function settings.'));
+      setResult({...data.recipe,inventoryCount:data.inventory_count});
+    } catch(err) {
+      console.error('DYOD generation failed:',err);
+      setError(err?.message || (zh?'生成失败，请稍后重试。':'Generation failed. Please try again.'));
+    } finally {
+      setBusy(false);
+    }
   };
   const translations={'Adventurous':'喜欢尝鲜、爱冒险','Romantic':'浪漫、感性','Playful':'活泼、有趣','Calm':'平静、放松','Mysterious':'神秘、深沉','Celebratory':'开心、庆祝时刻','I prefer not to say':'不想透露','Prefer not to say':'不想透露','Aries':'白羊座','Taurus':'金牛座','Gemini':'双子座','Cancer':'巨蟹座','Leo':'狮子座','Virgo':'处女座','Libra':'天秤座','Scorpio':'天蝎座','Sagittarius':'射手座','Capricorn':'摩羯座','Aquarius':'水瓶座','Pisces':'双鱼座','Sour':'酸爽','Sweet':'偏甜','Bitter':'微苦/苦韵','Balanced':'酸甜苦平衡','Herbal':'草本香气','Smoky':'烟熏风味','Light':'清爽、酒感轻','Medium':'酒感适中','Spirit-forward':'酒味浓郁'};
   const fields=[
