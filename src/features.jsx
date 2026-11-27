@@ -185,3 +185,23 @@ export function DYODFeedback({supabase,orderId,recipe}) {
     {message&&<small role="status">{message}</small>}
   </form>;
 }
+
+
+export function DYODFeedbackInsights({supabase}) {
+  const [rows,setRows]=useState([]);
+  const [message,setMessage]=useState('');
+  useEffect(()=>{
+    if(!supabase)return;
+    let active=true;
+    supabase.from('dyod_feedback').select('id,recipe_name,feedback,notes,created_at').order('created_at',{ascending:false}).limit(100)
+      .then(({data,error})=>{if(!active)return;if(error)setMessage('反馈记录暂不可读取：'+error.message);else setRows(data||[]);});
+    return ()=>{active=false;};
+  },[supabase]);
+  const labels={excellent:'非常出色',balanced:'平衡协调',too_sour:'酸度太高',too_sweet:'甜度太高',too_strong:'酒精感太重',too_weak:'酒感太轻',poor_match:'搭配不协调',other:'其他建议'};
+  const counts=rows.reduce((a,r)=>({...a,[r.feedback]:(a[r.feedback]||0)+1}),{});
+  return <section className="inventory-panel"><div className="eyebrow">DYOD · QUALITY LOOP</div><h2>调酒师反馈记录</h2><p>最近最多 100 条反馈。它们用于观察常见问题和后续改进规则，不会因单条反馈自动改变 AI 的调酒标准。</p>
+    {message&&<p className="form-message">{message}</p>}
+    {rows.length>0&&<div className="dyod-feedback-summary">{Object.entries(counts).map(([key,count])=><span key={key}>{labels[key]||key} · <b>{count}</b></span>)}</div>}
+    {rows.length===0&&!message?<p>还没有反馈记录。员工可在 DYOD 订单下方提交反馈。</p>:rows.map(row=><article className="ordercard" key={row.id}><div className="orderhead"><b>{row.recipe_name}</b><span>{labels[row.feedback]||row.feedback}</span></div>{row.notes&&<p>{row.notes}</p>}<small>{new Date(row.created_at).toLocaleString()}</small></article>)}
+  </section>;
+}
