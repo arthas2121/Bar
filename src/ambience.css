@@ -185,3 +185,5 @@ body::before{
 .game-leaderboard h3{color:#173b2a}
 .game-room-message{padding:10px 12px;border-radius:9px;background:#f5ead7;color:#795b2c}
 @media(max-width:620px){.game-room-columns{grid-template-columns:1fr}.game-room-panel{padding:18px;margin:20px 0}.game-room-top strong{font-size:26px}}
+
+.game-open-rooms{margin:18px 0;padding:16px;border:1px solid rgba(174,139,83,.22);border-radius:14px;background:rgba(255,255,255,.5)}.game-open-rooms h3{margin:0 0 10px;color:#173b2a}.game-open-room{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(52,70,56,.1)}.game-open-room:last-child{border-bottom:0}.game-open-room b,.game-open-room small{display:block}.game-open-room b{letter-spacing:.12em;color:#173b2a}.game-open-room small{margin-top:4px;color:#7b806f;font-size:12px}.game-open-room button{padding:8px 14px;font-size:12px}
