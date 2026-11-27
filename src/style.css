@@ -68,3 +68,36 @@ footer{color:#829084}
   .menu{grid-template-columns:1fr;gap:10px}
   .item{padding:15px 12px}
 }
+
+
+/* Simplified navigation, reservations and Design Your Own Drink */
+.brand-nav{gap:clamp(24px,7vw,76px)}
+.dyod-section,.inventory-panel{margin:44px 0;padding:30px;border:1px solid #d9dfd3;border-radius:16px;background:linear-gradient(145deg,#fffefa,#e9eee5);box-shadow:0 14px 36px rgba(30,55,36,.08)}
+.dyod-section h2,.inventory-panel h2{font:600 clamp(28px,5vw,38px) 'Playfair Display',serif;color:#294332;margin:10px 0}
+.dyod-section>p,.inventory-panel>p{color:#718073;font-size:13px;line-height:1.7}
+.dyod-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}
+.dyod-grid label{display:grid;gap:8px;color:#536756;font-size:12px;font-weight:700}
+.dyod-grid select,.reservation-form input,.reservation-form select,.reservation-form textarea,.ingredient-form input,.ingredient-form select{width:100%;min-width:0;padding:12px;border:1px solid #d7dfd4;border-radius:7px;background:#fff;color:#293b2e;font:inherit;font-size:13px}
+.dyod-generate,.reservation-form button,.ingredient-form button{border:0;border-radius:7px;background:#244d34;color:#fff;padding:13px 20px;font-weight:700;cursor:pointer}
+.dyod-generate:disabled{opacity:.55}
+.dyod-result{margin-top:24px;padding:24px;border-radius:12px;background:#203c2c;color:#f4efdf}
+.dyod-result h3{font:600 30px 'Playfair Display',serif;color:#e6cb91;margin:8px 0}
+.dyod-result p,.dyod-result li{font-size:13px;line-height:1.7;color:#e2e7dc}
+.dyod-result h4{color:#d8bd84;margin:20px 0 8px}
+.dyod-result small,.dyod-footnote{color:#9ca99a;font-size:11px;line-height:1.6}
+.dyod-result ul{padding-left:20px}
+.visit-panel{display:grid;grid-template-columns:.8fr 1.2fr;gap:28px;align-items:start;margin:48px 0 12px;padding:30px;border-radius:16px;background:linear-gradient(120deg,#183d2a,#315c3e);color:#fff}
+.visit-panel h2{font:600 34px 'Playfair Display',serif;margin:10px 0;color:#f4e9d1}
+.visit-panel p{font-size:13px;line-height:1.7;color:#d7e0d4}
+.reservation-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reservation-form textarea{grid-column:1/-1;min-height:75px;resize:vertical}
+.reservation-form button{grid-column:1/-1;background:#d5bb80;color:#203b2b}
+.form-message{grid-column:1/-1;font-size:12px;color:#e9d6a7}
+.ingredient-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.ingredient-form button{grid-column:1/-1}
+.inventory-list{display:grid;gap:8px}
+.inventory-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:12px;border-bottom:1px solid #dfe5dc}
+.inventory-row span{display:grid;gap:4px;min-width:0}
+.inventory-row small{color:#788578;font-size:11px}
+.inventory-row button{border:1px solid #cbd5c9;background:#fff;color:#35563b;border-radius:6px;padding:7px 9px;font-size:11px}
+@media(max-width:650px){.dyod-section,.inventory-panel{padding:20px}.dyod-grid,.visit-panel,.ingredient-form{grid-template-columns:1fr}.reservation-form{grid-template-columns:1fr}.reservation-form textarea,.reservation-form button,.ingredient-form button{grid-column:auto}.visit-panel{padding:22px}.inventory-row{align-items:flex-start;flex-wrap:wrap}}
