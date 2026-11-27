@@ -202,3 +202,20 @@ body::before{
 .staff-feature-heading h2{margin:6px 0;color:#173b2a;font-family:Georgia,serif;font-size:30px}
 .staff-feature-heading p{color:#73786d}
 @media(max-width:760px){.staff-workspace{grid-template-columns:1fr;gap:14px}.staff-sidebar{position:static;display:flex;overflow-x:auto;gap:6px;padding:9px}.staff-sidebar-title{display:none}.staff-sidebar button{width:auto;white-space:nowrap;flex:0 0 auto;padding:10px 12px}.staff-workspace-content{width:100%}}
+
+
+/* Liar's Dice multiplayer table */
+.liars-dice-board{display:grid;gap:16px;margin:18px 0;padding:18px;border:1px solid rgba(190,160,105,.28);border-radius:16px;background:rgba(20,25,24,.55)}
+.liars-turn,.liars-current-bid{padding:12px 14px;border-radius:10px;background:rgba(255,255,255,.045)}
+.liars-turn em{color:#d6b77d;font-style:normal}
+.liars-my-dice{display:grid;gap:10px}
+.liars-dice-faces{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.liars-dice-faces span{display:grid;place-items:center;width:48px;height:48px;border-radius:10px;background:#f4eee2;color:#24211c;font-size:32px;box-shadow:0 3px 9px #0004}
+.liars-dice-faces small{opacity:.7}
+.liars-current-bid p{margin:7px 0 0}
+.liars-actions{display:flex;flex-wrap:wrap;align-items:end;gap:10px}
+.liars-actions label{display:grid;gap:6px;min-width:90px}
+.liars-actions select{min-height:42px;padding:8px 10px;border-radius:8px}
+.liars-actions .game-challenge{background:transparent;border:1px solid #c58b78;color:inherit}
+.liars-reveal{margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04)}
+.liars-reveal p{margin:5px 0}
