@@ -147,3 +147,41 @@ export function ReservationsAdmin({supabase}) {
   const statusText=s=>({pending:'待处理',confirmed:'已确认',declined:'已婉拒'})[s]||s;
   return <section className="inventory-panel"><div className="eyebrow">顾客预约</div><h2>预约申请管理</h2>{message&&<p>{message}</p>}{rows.length===0?<p>目前还没有预约申请。</p>:rows.map(r=><article className="ordercard" key={r.id}><div className="orderhead"><b>{r.guest_name} · {r.party_size} 位客人</b><span>{statusText(r.status)}</span></div><p>{r.reservation_date} {String(r.reservation_time).slice(0,5)} · {r.contact}</p>{r.notes&&<p>备注：{r.notes}</p>}<div className="statusactions"><button onClick={()=>update(r.id,'confirmed')}>确认预约</button><button onClick={()=>update(r.id,'declined')}>婉拒预约</button></div></article>)}</section>;
 }
+
+
+export function DYODFeedback({supabase,orderId,recipe}) {
+  const [rating,setRating]=useState('balanced');
+  const [notes,setNotes]=useState('');
+  const [message,setMessage]=useState('');
+  const [busy,setBusy]=useState(false);
+  const submit=async e=>{
+    e.preventDefault();
+    if(!supabase)return;
+    setBusy(true);setMessage('');
+    const {error}=await supabase.from('dyod_feedback').insert({
+      order_id:orderId,
+      recipe_name:recipe?.name_en||recipe?.name||recipe?.name_zh||'Custom cocktail',
+      feedback:rating,
+      notes:notes.trim()||null
+    });
+    setBusy(false);
+    setMessage(error?'反馈未保存：'+error.message:'反馈已记录，谢谢！');
+    if(!error)setNotes('');
+  };
+  return <form className="dyod-feedback-form" onSubmit={submit}>
+    <b>调酒师反馈 · DYOD</b>
+    <select aria-label="配方反馈" value={rating} onChange={e=>setRating(e.target.value)}>
+      <option value="excellent">非常出色</option>
+      <option value="balanced">平衡协调</option>
+      <option value="too_sour">酸度太高</option>
+      <option value="too_sweet">甜度太高</option>
+      <option value="too_strong">酒精感太重</option>
+      <option value="too_weak">酒感太轻</option>
+      <option value="poor_match">风味搭配不协调</option>
+      <option value="other">其他建议</option>
+    </select>
+    <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="补充备注（选填）" rows="2" maxLength="1000"/>
+    <button type="submit" disabled={busy}>{busy?'保存中…':'保存反馈'}</button>
+    {message&&<small role="status">{message}</small>}
+  </form>;
+}
