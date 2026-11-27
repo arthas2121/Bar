@@ -28,33 +28,24 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
   const [lobbyRooms,setLobbyRooms]=useState([]);
   const [lastResult,setLastResult]=useState(null);
   const tr=(en,cn)=>zh?cn:en;
-  const loadLobby=async()=>{const {data}=await supabase.from('game_rooms').select('id,code,host_name,game_type,max_players,created_at').eq('status','waiting').order('created_at',{ascending:false}).limit(20);setLobbyRooms(data||[]);};
+  const loadLobby=async()=>{const {data,error}=await supabase.rpc('game_list_waiting_rooms');if(!error)setLobbyRooms(data||[]);};
   const loadRoom=async id=>{
-    const [r,p,g]=await Promise.all([
-      supabase.from('game_rooms').select('*').eq('id',id).maybeSingle(),
-      supabase.from('game_players').select('*').eq('room_id',id).order('joined_at'),
-      supabase.from('game_rounds').select('*').eq('room_id',id).order('created_at',{ascending:false}).limit(20)
-    ]);
-    if(r.error||!r.data){setMessage(tr('Could not load room. Please refresh.','无法读取房间，请刷新页面。'));return;}
-    setRoom(r.data);setPlayers(p.data||[]);setRounds(g.data||[]);
-    if(r.data.game_state?.last_result)setLastResult(r.data.game_state.last_result);
+    const {data,error}=await supabase.rpc('game_get_room',{p_room:id});
+    if(error||!data?.room){setMessage(tr('Could not load room. Please refresh.','无法读取房间，请刷新页面。'));return;}
+    setRoom(data.room);setPlayers(data.players||[]);setRounds(data.rounds||[]);
+    if(data.room.game_state?.last_result)setLastResult(data.room.game_state.last_result);
   };
   useEffect(()=>{
     loadLobby();
     const lobbyTimer=setInterval(loadLobby,5000);
-    const saved=JSON.parse(localStorage.getItem('ace-game-session')||'null');
+    let saved=null;try{saved=JSON.parse(localStorage.getItem('ace-game-session')||'null');}catch{localStorage.removeItem('ace-game-session');}
     if(saved?.room_id&&saved?.player_token){setToken(saved.player_token);setHostToken(saved.host_token||'');loadRoom(saved.room_id);}
     return()=>clearInterval(lobbyTimer);
   },[]);
   useEffect(()=>{
     if(!room?.id)return;
-    const channel=supabase.channel('ace-game-'+room.id)
-      .on('postgres_changes',{event:'*',schema:'public',table:'game_rooms',filter:'id=eq.'+room.id},()=>loadRoom(room.id))
-      .on('postgres_changes',{event:'*',schema:'public',table:'game_players',filter:'room_id=eq.'+room.id},()=>loadRoom(room.id))
-      .on('postgres_changes',{event:'*',schema:'public',table:'game_rounds',filter:'room_id=eq.'+room.id},()=>loadRoom(room.id))
-      .subscribe();
-    const timer=setInterval(()=>{loadRoom(room.id);loadLobby();},5000);
-    return()=>{clearInterval(timer);supabase.removeChannel(channel);};
+    const timer=setInterval(()=>{loadRoom(room.id);loadLobby();},3000);
+    return()=>clearInterval(timer);
   },[room?.id]);
   const saveSession=data=>{
     const s={...data};localStorage.setItem('ace-game-session',JSON.stringify(s));
