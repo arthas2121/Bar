@@ -61,6 +61,7 @@ serve(async (req) => {
     };
 
     let recipe: Recipe | null = null;
+    let lastValidRecipe: Recipe | null = null;
     let lastInvalid: string[] = [];
     let finalReview: Review | null = null;
 
@@ -87,7 +88,7 @@ serve(async (req) => {
 
       if (!Array.isArray(recipe?.ingredients) || recipe.ingredients.length === 0) {
         lastInvalid = ["missing ingredient list"];
-        recipe = null;
+        recipe = lastValidRecipe;
         continue;
       }
 
@@ -98,7 +99,7 @@ serve(async (req) => {
       if (lastInvalid.length || missingAmounts) {
         if (missingAmounts) lastInvalid.push("missing ingredient amount");
         console.warn("DYOD recipe failed inventory/quantity validation:", lastInvalid);
-        recipe = null;
+        recipe = lastValidRecipe;
         continue;
       }
 
@@ -107,6 +108,7 @@ serve(async (req) => {
         ...x,
         name: byName.get(x.name.trim().toLowerCase())!.name
       }));
+      lastValidRecipe = structuredClone(recipe);
 
       const reviewInput = {
         guest_preferences: answers,
@@ -137,6 +139,7 @@ serve(async (req) => {
     // Do not discard a usable, inventory-valid recipe solely because the
     // heuristic reviewer is conservative or cannot confidently award 85+.
     // Return it transparently for bartender review; never invent a passing score.
+    recipe = recipe || lastValidRecipe;
     if (recipe && Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0) {
       const score = Number(finalReview?.score);
       const hasScore = Number.isFinite(score);
