@@ -15,12 +15,12 @@ create table if not exists public.game_rooms (
 create table if not exists public.game_players (
   id uuid primary key default gen_random_uuid(),
   room_id uuid not null references public.game_rooms(id) on delete cascade,
-  player_token text not null,
+  player_token_hash text not null,
   display_name text not null,
   role text not null default 'player' check (role in ('host','player')),
   score integer not null default 0,
   joined_at timestamptz not null default now(),
-  unique(room_id, player_token)
+  unique(room_id, player_token_hash)
 );
 create table if not exists public.game_rounds (
   id uuid primary key default gen_random_uuid(),
@@ -50,7 +50,7 @@ begin
  if p_max not between 2 and 12 then raise exception 'Player limit must be 2–12'; end if;
  c:=upper(substr(encode(gen_random_bytes(5),'hex'),1,6));
  insert into game_rooms(code,host_token_hash,host_name,game_type,max_players) values(c,encode(digest(ht,'sha256'),'hex'),trim(p_name),p_game,p_max) returning * into r;
- insert into game_players(room_id,player_token,display_name,role) values(r.id,pt,trim(p_name),'host');
+ insert into game_players(room_id,player_token_hash,display_name,role) values(r.id,encode(digest(pt,'sha256'),'hex'),trim(p_name),'host');
  return jsonb_build_object('room_id',r.id,'code',r.code,'player_token',pt,'host_token',ht);
 end $$;
 
@@ -62,7 +62,7 @@ begin
  if not found then raise exception 'Room not found or game already started'; end if;
  if (select count(*) from game_players where room_id=r.id)>=r.max_players then raise exception 'Room is full'; end if;
  if length(trim(p_name)) not between 1 and 40 then raise exception 'Please enter a name'; end if;
- insert into game_players(room_id,player_token,display_name) values(r.id,pt,trim(p_name)) returning id into pid;
+ insert into game_players(room_id,player_token_hash,display_name) values(r.id,encode(digest(pt,'sha256'),'hex'),trim(p_name)) returning id into pid;
  return jsonb_build_object('room_id',r.id,'player_id',pid,'player_token',pt,'host_token',null);
 end $$;
 
@@ -83,7 +83,7 @@ declare r game_rooms; p game_players; result jsonb; val integer; deck text[]:=ar
 begin
  select * into r from game_rooms where id=p_room for update;
  if not found or r.status<>'playing' then raise exception 'Game is not active'; end if;
- select * into p from game_players where room_id=p_room and player_token=p_token;
+ select * into p from game_players where room_id=p_room and player_token_hash=encode(digest(p_token,'sha256'),'hex');
  if not found then raise exception 'Player not found'; end if;
  roundno:=coalesce((r.game_state->>'round')::integer,1);
  if r.game_type in ('liars_dice','high_low') then
