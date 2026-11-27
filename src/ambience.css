@@ -149,3 +149,7 @@ body::before{
 .dyod-feedback-form button{justify-self:start;border:0;border-radius:8px;padding:10px 15px;background:#173b2a;color:#fff;font-weight:700}
 .dyod-feedback-form button:disabled{opacity:.55}
 .dyod-feedback-form small{color:#526653}
+
+.dyod-feedback-summary{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.dyod-feedback-summary span{padding:8px 11px;border-radius:999px;background:#e9eadf;color:#34513a;font-size:12px}
+.dyod-feedback-summary b{color:#173b2a}
