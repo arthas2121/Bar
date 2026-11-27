@@ -101,3 +101,7 @@ footer{color:#829084}
 .inventory-row small{color:#788578;font-size:11px}
 .inventory-row button{border:1px solid #cbd5c9;background:#fff;color:#35563b;border-radius:6px;padding:7px 9px;font-size:11px}
 @media(max-width:650px){.dyod-section,.inventory-panel{padding:20px}.dyod-grid,.visit-panel,.ingredient-form{grid-template-columns:1fr}.reservation-form{grid-template-columns:1fr}.reservation-form textarea,.reservation-form button,.ingredient-form button{grid-column:auto}.visit-panel{padding:22px}.inventory-row{align-items:flex-start;flex-wrap:wrap}}
+
+/* Top navigation uses buttons so tab panels are mounted before scrolling */
+.brand-nav button{border:0;background:transparent;padding:0;color:#526b56;text-decoration:none;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.brand-nav button:hover{color:#a0834f}
