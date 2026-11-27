@@ -127,7 +127,7 @@ serve(async (req) => {
       finalReview = reviewed.value as Review;
 
       if (finalReview?.pass === true && Number(finalReview.score) >= 85 && Array.isArray(finalReview.issues)) {
-        return json({ recipe, inventory_count: inventory.length });
+        return json({ recipe, inventory_count: inventory.length, quality_score: Number(finalReview.score), quality_review: { passed: true, issues: finalReview.issues } });
       }
       console.warn("DYOD recipe did not pass independent review; refining:", finalReview);
     }
