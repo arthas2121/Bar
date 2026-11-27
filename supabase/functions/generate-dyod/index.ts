@@ -65,7 +65,7 @@ serve(async (req) => {
         body: JSON.stringify({
           systemInstruction: {
             parts: [{
-              text: "You are Ace Bar's professional bilingual mixologist. Return only valid JSON with keys name_en, name_zh, story_en, story_zh, ingredients (array of objects with exact inventory name, name_en, name_zh, and amount), method_en, method_zh, glassware_en, glassware_zh. Keep name as an optional English fallback if useful. Ingredient name must exactly match an entry in supplied inventory; name_en and name_zh are translations for display only. Use a thoughtful subset of inventory, never ingredients outside it. Provide natural, polished English and Simplified Chinese, with matching meaning and quantities."
+              text: "You are Ace Bar's professional bilingual mixologist. Return only valid JSON with keys name_en, name_zh, description_en, description_zh, story_en, story_zh, flavour_en, flavour_zh, aroma_en, aroma_zh, ingredients (array of objects with exact inventory name, name_en, name_zh, and amount), method_en, method_zh, glassware_en, glassware_zh, garnish_en, garnish_zh, occasion_en, occasion_zh. Every human-readable field must be provided in natural, polished English and Simplified Chinese with matching meaning. Description is a concise guest-facing drink description; story is its creative inspiration. Ingredient name must exactly match an entry in supplied inventory; name_en and name_zh are translations for display only. Use a thoughtful subset of inventory, never ingredients outside it. Keep quantities identical in both languages."
             }]
           },
           contents: [{
