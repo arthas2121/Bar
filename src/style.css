@@ -12,3 +12,24 @@
 button:disabled{opacity:.55;cursor:wait}
 
 .trackinghint{margin-top:12px;padding-top:10px;border-top:1px solid #ffffff14;color:#8f9b8f;font-size:10px}
+
+/* Premium hospitality brand refresh */
+:root{font-family:'DM Sans',sans-serif;color:#243329;background:#f5f6f1}
+body{background:#f5f6f1;color:#243329}
+.top{background:#fbfcf8;border-bottom:1px solid #e2e7dd;position:sticky;top:0;z-index:20}
+.brand b{color:#203c2c}.brand small{color:#7d897d}.brandmark{border-color:#b99b65;color:#315d3e}
+.lang{border-color:#d7dfd4;color:#31523a;background:#fff}
+.brand-hero{min-height:440px;margin:28px 0 0;padding:55px 6%;border-radius:20px;background:linear-gradient(115deg,#173b2a 0%,#28543b 56%,#b3a16f 140%);display:grid;grid-template-columns:1.2fr .8fr;align-items:center;overflow:hidden;color:#f8f8ef;position:relative}
+.hero-copy{position:relative;z-index:2}.hero-copy .eyebrow{color:#d9c18a}.hero-copy h1{font:700 clamp(48px,7vw,76px)/.98 'Playfair Display',serif;margin:18px 0}.hero-copy h1 em{color:#d9c18a}.hero-copy p{max-width:430px;color:#dce4d9;line-height:1.8;font-size:14px}
+.hero-actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}.primary-link,.secondary-link{display:inline-flex;align-items:center;padding:13px 18px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700}.primary-link{background:#d6bd83;color:#203b2b}.secondary-link{border:1px solid #ffffff66;color:#fff}
+.hero-art{height:310px;position:relative;display:grid;place-items:center}.hero-glass{font-size:126px;filter:drop-shadow(0 20px 24px #07170e88);z-index:1;transform:rotate(-8deg)}.hero-orbit{position:absolute;border:1px solid #e4d4a766;border-radius:50%;width:260px;height:260px}.orbit-two{width:320px;height:320px;border-color:#ffffff28}.hero-caption{position:absolute;bottom:0;right:5%;font-size:10px;letter-spacing:3px;line-height:1.8;color:#e7d8ad}
+.brand-nav{display:flex;justify-content:center;gap:clamp(18px,5vw,58px);padding:18px 10px;border-bottom:1px solid #dfe5dc;flex-wrap:wrap}.brand-nav a{color:#526b56;text-decoration:none;font-size:12px;font-weight:700}.brand-nav a:hover{color:#a0834f}
+.welcome{padding-top:44px}.welcome h1{color:#24392b}.welcome h1 em{color:#9c8250}.welcome p,.muted{color:#718073}.eyebrow{color:#9a8050}
+.tabs{border-color:#dce3da}.tabs button{color:#7d8a7e}.tabs button.active{color:#315c3d}.tabs button.active:after{background:#a98c54}
+.item{border-color:#e0e6dd}.drinkicon{background:#e8eee5}.iteminfo p{color:#718073}.iteminfo b{color:#967744}.quantity button{border-color:#9cae9b;color:#315c3d}.quantity button.add{background:#315c3d;color:white}
+.checkout{background:#e4eadf;color:#263c2d}.checkout small{color:#687b69}.checkout button{background:#28543b;color:#fff}
+.ordercard{background:#fff;border:1px solid #e0e6dd;box-shadow:0 8px 24px #203b2b0a}.orderhead span{color:#8b7548}.ordercard p{color:#657467}.ordercard>strong{color:#8e7549}
+.success{background:#e8f0e7;color:#31583a;border-color:#cbdcc9}.empty{color:#718073}.empty h3{color:#294432}.empty button{background:#315c3d;color:#fff}
+.brand-panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:56px 0 10px}.brand-panel{padding:30px;border-radius:14px;background:#e8eee5;border:1px solid #dce5d9}.brand-panel h2,.visit-panel h2{font:600 clamp(24px,3vw,34px)/1.15 'Playfair Display',serif;color:#274331;margin:12px 0}.brand-panel p,.visit-panel p{font-size:13px;line-height:1.8;color:#68796a}.event-panel{background:#f0eadb;border-color:#e7ddc8}.event-panel a{color:#846b3e;text-decoration:none;font-size:12px;font-weight:700}.panel-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px}.panel-tags span{font-size:9px;letter-spacing:1px;color:#44634a;border:1px solid #c4d2c0;padding:7px 9px;border-radius:20px}.visit-panel{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:28px 30px;border-radius:14px;background:#244a34;color:#fff}.visit-panel h2{color:#fff}.visit-panel p{color:#d5e0d4}.visit-panel .primary-link{white-space:nowrap}
+footer{color:#829084}
+@media(max-width:650px){.brand-hero{grid-template-columns:1fr;min-height:auto;padding:38px 25px}.hero-art{height:190px}.hero-glass{font-size:90px}.hero-orbit{width:170px;height:170px}.orbit-two{width:210px;height:210px}.hero-caption{right:0;bottom:-5px}.brand-nav{justify-content:flex-start;overflow:auto;flex-wrap:nowrap}.brand-nav a{white-space:nowrap}.brand-panels{grid-template-columns:1fr}.visit-panel{grid-column:auto;align-items:flex-start;flex-direction:column}.welcome{padding-top:38px}}
