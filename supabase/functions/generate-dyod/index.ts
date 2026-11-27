@@ -7,18 +7,17 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-    if (!apiKey) return json({ error: "OPENAI_API_KEY is not configured" }, 503);
+    if (!apiKey) return json({ error: "GEMINI_API_KEY is not configured" }, 503);
     if (!supabaseUrl || !supabaseKey) return json({ error: "Supabase environment is not configured" }, 503);
 
     const body = await req.json().catch(() => ({}));
     const answers = body?.answers ?? {};
 
-    // Always read the live inventory here, so new stock and availability changes
-    // are reflected immediately without relying on a stale browser copy.
+    // Read the live inventory on every request, including newly added stock.
     const inventoryUrl = new URL("/rest/v1/bar_ingredients", supabaseUrl);
     inventoryUrl.searchParams.set("select", "name,category,notes");
     inventoryUrl.searchParams.set("is_available", "eq.true");
@@ -29,8 +28,10 @@ serve(async (req) => {
       headers: { apikey: supabaseKey, Authorization: "Bearer " + supabaseKey }
     });
     if (!inventoryResponse.ok) {
+      console.error("Inventory request failed:", inventoryResponse.status, await inventoryResponse.text());
       return json({ error: "Could not read the latest bar inventory" }, 502);
     }
+
     const ingredients = await inventoryResponse.json() as Ingredient[];
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
       return json({ error: "No available ingredients. Add stock and mark it available first." }, 400);
@@ -39,45 +40,58 @@ serve(async (req) => {
     const allowed = ingredients.map((x) => ({
       name: x.name, category: x.category, notes: x.notes || ""
     }));
+
     const prompt = {
       guest_preferences: answers,
       complete_available_bar_inventory: allowed,
       instructions: [
         "Create one original, balanced, practical cocktail for a professional bar.",
-        "Consider the FULL inventory list as your available palette. Choose the best compatible ingredients from across all listed categories; do not arbitrarily ignore a listed ingredient if it would materially improve the drink.",
-        "Use a sensible subset of the inventory, not every bottle in one glass. Normally choose one main base spirit, and add compatible modifiers, vermouth, bitters, syrups, juices, teas and garnishes as appropriate.",
-        "Use ONLY exact ingredient names from the supplied inventory. Never invent ingredients, brands, garnishes, juices, syrups, spirits, bitters, water, ice or other additions that are not listed.",
+        "Consider the full inventory as your available palette. Choose compatible ingredients; do not arbitrarily ignore an ingredient if it materially improves the drink.",
+        "Use a sensible subset, not every bottle in one glass. Normally choose one main base spirit with compatible modifiers, vermouth, bitters, syrups, juices, teas and garnishes as appropriate.",
+        "Use ONLY exact ingredient names from the supplied inventory. Never invent ingredients or additions that are not listed.",
         "Respect the guest's requested flavour and strength. Give precise quantities in ml for one serving, a concise method, suitable glassware and a short appealing story.",
-        "If the available inventory cannot make a balanced cocktail, explain the limitation honestly and propose the closest feasible option using only listed ingredients."
+        "If the inventory cannot make a balanced cocktail, explain the limitation honestly and propose the closest feasible option using only listed ingredients."
       ]
     };
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "You are Ace Bar's professional mixologist. Return valid JSON with keys name, story, ingredients (array of objects with exact name and amount), method, and glassware. Ingredient names must exactly match entries in the supplied inventory. Use a thoughtful subset of the full inventory, never ingredients outside it. Write the guest-facing recipe and story in the same language as the guest's interface/preferences where practical."
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": apiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{
+              text: "You are Ace Bar's professional mixologist. Return only valid JSON with keys name, story, ingredients (array of objects with exact name and amount), method, and glassware. Ingredient names must exactly match entries in the supplied inventory. Use a thoughtful subset of the full inventory, never ingredients outside it. Write the guest-facing recipe and story in the same language as the guest's interface/preferences where practical."
+            }]
           },
-          { role: "user", content: JSON.stringify(prompt) }
-        ],
-        temperature: 0.85
-      })
-    });
+          contents: [{
+            role: "user",
+            parts: [{ text: JSON.stringify(prompt) }]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.85
+          }
+        })
+      }
+    );
 
     if (!response.ok) {
       const detail = await response.text();
-      console.error("OpenAI request failed:", response.status, detail);
+      console.error("Gemini request failed:", response.status, detail);
       return json({ error: "AI provider request failed", status: response.status }, 502);
     }
 
     const result = await response.json();
-    const content = result.choices?.[0]?.message?.content;
+    const content = result.candidates?.[0]?.content?.parts
+      ?.map((part: { text?: string }) => part.text || "")
+      .join("");
     if (!content) return json({ error: "AI returned an empty recipe" }, 502);
+
     const recipe = JSON.parse(content);
     const allowedNames = new Set(allowed.map((x) => x.name.trim().toLowerCase()));
     if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0 ||
