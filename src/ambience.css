@@ -153,3 +153,35 @@ body::before{
 .dyod-feedback-summary{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
 .dyod-feedback-summary span{padding:8px 11px;border-radius:999px;background:#e9eadf;color:#34513a;font-size:12px}
 .dyod-feedback-summary b{color:#173b2a}
+
+/* ACE BAR multiplayer Game Room */
+.game-room-panel{max-width:900px;margin:30px auto;padding:clamp(20px,4vw,36px);border:1px solid rgba(174,139,83,.28);border-radius:22px;background:linear-gradient(145deg,rgba(255,254,248,.96),rgba(235,235,222,.94));box-shadow:0 18px 48px rgba(30,48,32,.1)}
+.game-room-panel>h2{font-family:Georgia,serif;font-size:clamp(34px,6vw,48px);color:#173b2a;margin:8px 0}
+.game-room-panel>p{color:#687064;line-height:1.7}
+.game-room-notice,.game-lobby-note{padding:12px 14px;border-radius:11px;background:#e9ecdf;color:#52634c;font-size:13px;line-height:1.6;margin:16px 0}
+.game-room-entry label,.game-create label,.game-join label,.game-play-area label{display:grid;gap:7px;font-size:13px;font-weight:700;color:#344638;margin:12px 0}
+.game-room-entry input,.game-room-entry select,.game-play-area select{width:100%;border:1px solid rgba(52,70,56,.2);border-radius:10px;padding:12px;background:#fff;color:#263329;font:inherit}
+.game-room-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.game-create,.game-join{padding:18px;border:1px solid rgba(174,139,83,.25);border-radius:15px;background:rgba(255,255,255,.65)}
+.game-create h3,.game-join h3{margin:0 0 12px;color:#173b2a}
+.game-room-panel button{border:0;border-radius:999px;padding:12px 18px;background:#173b2a;color:white;font-weight:700;cursor:pointer}
+.game-room-panel button:disabled{opacity:.5;cursor:not-allowed}
+.game-room-top{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-radius:14px;background:#173b2a;color:#f4e8cd}
+.game-room-top small{display:block;font-size:10px;letter-spacing:.18em;opacity:.75}
+.game-room-top strong{display:block;font-family:Georgia,serif;font-size:32px;letter-spacing:.12em}
+.game-status{font-size:12px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.15)}
+.game-status.playing{background:#b68d4c;color:#1b261d}.game-status.finished{background:#d9e5d5;color:#25452e}
+.game-active-room>h3{font-family:Georgia,serif;font-size:25px;color:#173b2a;margin:22px 0 12px}
+.game-player-list{border:1px solid rgba(52,70,56,.14);border-radius:13px;padding:14px;background:rgba(255,255,255,.58)}
+.game-player{display:flex;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px solid rgba(52,70,56,.1);color:#344638}
+.game-player:last-child{border-bottom:0}.game-player small{color:#8a795d}
+.game-play-area{margin-top:20px;padding:18px;border-radius:15px;background:#f0eee4;border:1px solid rgba(174,139,83,.24)}
+.game-play-area>h3{color:#173b2a;margin-top:0}
+.game-last-result{margin:16px 0;padding:14px;border-radius:12px;background:#fff}
+.game-last-result pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#465143;font-size:12px}
+.game-finish,.game-leave{margin:12px 8px 0 0!important}
+.game-finish{background:#9a653f!important}.game-leave{background:transparent!important;color:#52634c!important;border:1px solid rgba(52,70,56,.25)!important}
+.game-leaderboard{margin-top:20px;padding:18px;border-radius:14px;background:#e9ecdf}
+.game-leaderboard h3{color:#173b2a}
+.game-room-message{padding:10px 12px;border-radius:9px;background:#f5ead7;color:#795b2c}
+@media(max-width:620px){.game-room-columns{grid-template-columns:1fr}.game-room-panel{padding:18px;margin:20px 0}.game-room-top strong{font-size:26px}}
