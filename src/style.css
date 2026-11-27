@@ -115,3 +115,5 @@ footer{color:#829084}
 .clear-orders{border:1px solid #b65c50;background:#fff8f5;color:#9e4035;padding:9px 12px;border-radius:20px;font-size:12px;font-weight:700}
 .clear-orders:disabled{opacity:.55;cursor:wait}
 @media(max-width:560px){.staff-order-tools{gap:6px}.clear-orders{font-size:11px;padding:8px 10px}}
+
+.order-select{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:#526b56;font-size:12px;font-weight:700}.order-select input{width:16px;height:16px;accent-color:#35563b}
