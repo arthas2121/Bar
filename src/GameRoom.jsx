@@ -25,8 +25,10 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
   const [busy,setBusy]=useState(false);
   const [guess,setGuess]=useState('higher');
   const [maxPlayers,setMaxPlayers]=useState(8);
+  const [lobbyRooms,setLobbyRooms]=useState([]);
   const [lastResult,setLastResult]=useState(null);
   const tr=(en,cn)=>zh?cn:en;
+  const loadLobby=async()=>{const {data}=await supabase.from('game_rooms').select('id,code,host_name,game_type,max_players,created_at').eq('status','waiting').order('created_at',{ascending:false}).limit(20);setLobbyRooms(data||[]);};
   const loadRoom=async id=>{
     const [r,p,g]=await Promise.all([
       supabase.from('game_rooms').select('*').eq('id',id).maybeSingle(),
@@ -38,6 +40,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
     if(r.data.game_state?.last_result)setLastResult(r.data.game_state.last_result);
   };
   useEffect(()=>{
+    loadLobby();
     const saved=JSON.parse(localStorage.getItem('ace-game-session')||'null');
     if(saved?.room_id&&saved?.player_token){setToken(saved.player_token);setHostToken(saved.host_token||'');loadRoom(saved.room_id);}
   },[]);
@@ -48,7 +51,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
       .on('postgres_changes',{event:'*',schema:'public',table:'game_players',filter:'room_id=eq.'+room.id},()=>loadRoom(room.id))
       .on('postgres_changes',{event:'*',schema:'public',table:'game_rounds',filter:'room_id=eq.'+room.id},()=>loadRoom(room.id))
       .subscribe();
-    const timer=setInterval(()=>loadRoom(room.id),5000);
+    const timer=setInterval(()=>{loadRoom(room.id);loadLobby();},5000);
     return()=>{clearInterval(timer);supabase.removeChannel(channel);};
   },[room?.id]);
   const saveSession=data=>{
@@ -101,6 +104,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
         </form>
       </div>
       <div className="game-lobby-note">{tr('Scan the same Ace Bar QR code to open this lobby. Choose a waiting room or enter its code to join.','所有人扫描同一个 Ace Bar 二维码进入这里，再输入房间码加入朋友创建的游戏。')}</div>
+      <div className="game-open-rooms"><h3>{tr('Open rooms','正在等待的房间')}</h3>{lobbyRooms.length===0?<p>{tr('No rooms are waiting yet. Be the first to create one!','目前没有等待中的房间，创建一个吧！')}</p>:lobbyRooms.map(r=><div className="game-open-room" key={r.id}><div><b>{r.code}</b><small>{zh?GAME_ZH[r.game_type]:GAME_LABEL[r.game_type]} · {tr('Host','主持人')} {r.host_name}</small></div><button type="button" onClick={()=>setCode(r.code)}>{tr('Use code','使用房间码')}</button></div>)}</div>
     </div>:<div className="game-active-room">
       <div className="game-room-top"><div><small>{tr('ROOM CODE','房间码')}</small><strong>{room.code}</strong></div><span className={'game-status '+room.status}>{({waiting:tr('Waiting','等待中'),playing:tr('Playing','游戏中'),finished:tr('Finished','已结束')})[room.status]}</span></div>
       <h3>{zh?GAME_ZH[room.game_type]:GAME_LABEL[room.game_type]}</h3>
