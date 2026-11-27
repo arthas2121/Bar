@@ -33,3 +33,38 @@ body{background:#f5f6f1;color:#243329}
 .brand-panels{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:56px 0 10px}.brand-panel{padding:30px;border-radius:14px;background:#e8eee5;border:1px solid #dce5d9}.brand-panel h2,.visit-panel h2{font:600 clamp(24px,3vw,34px)/1.15 'Playfair Display',serif;color:#274331;margin:12px 0}.brand-panel p,.visit-panel p{font-size:13px;line-height:1.8;color:#68796a}.event-panel{background:#f0eadb;border-color:#e7ddc8}.event-panel a{color:#846b3e;text-decoration:none;font-size:12px;font-weight:700}.panel-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px}.panel-tags span{font-size:9px;letter-spacing:1px;color:#44634a;border:1px solid #c4d2c0;padding:7px 9px;border-radius:20px}.visit-panel{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:28px 30px;border-radius:14px;background:#244a34;color:#fff}.visit-panel h2{color:#fff}.visit-panel p{color:#d5e0d4}.visit-panel .primary-link{white-space:nowrap}
 footer{color:#829084}
 @media(max-width:650px){.brand-hero{grid-template-columns:1fr;min-height:auto;padding:38px 25px}.hero-art{height:190px}.hero-glass{font-size:90px}.hero-orbit{width:170px;height:170px}.orbit-two{width:210px;height:210px}.hero-caption{right:0;bottom:-5px}.brand-nav{justify-content:flex-start;overflow:auto;flex-wrap:nowrap}.brand-nav a{white-space:nowrap}.brand-panels{grid-template-columns:1fr}.visit-panel{grid-column:auto;align-items:flex-start;flex-direction:column}.welcome{padding-top:38px}}
+
+
+/* Signature cocktail menu refresh — warm gold, deep bar tones */
+.menu{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin-top:20px;
+}
+.item{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:18px 14px;
+  border:1px solid rgba(201,170,112,.22);
+  border-radius:12px;
+  background:linear-gradient(145deg,rgba(45,43,34,.94),rgba(19,25,21,.98));
+  box-shadow:0 12px 28px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.04);
+}
+.drinkicon{
+  width:54px;height:54px;flex:0 0 54px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 25%,#6d5735,#25291f 72%);
+  border:1px solid rgba(215,183,123,.45);
+  display:grid;place-items:center;font-size:25px;
+}
+.iteminfo h3{font-family:'Playfair Display',serif;font-size:16px;line-height:1.25;color:#f2e4c8}
+.iteminfo p{font-size:11px;line-height:1.45;color:#a9a294}
+.iteminfo b{font-size:11px;letter-spacing:.5px;color:#d7b77b}
+.quantity{gap:8px}
+@media(max-width:620px){
+  .menu{grid-template-columns:1fr;gap:10px}
+  .item{padding:15px 12px}
+}
