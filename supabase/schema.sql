@@ -65,3 +65,44 @@ $$;
 
 revoke all on function public.get_customer_order_status(uuid, text) from public;
 grant execute on function public.get_customer_order_status(uuid, text) to anon, authenticated;
+
+
+-- DYOD ingredient inventory and reservation requests
+create table if not exists public.bar_ingredients (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  category text not null,
+  notes text,
+  is_available boolean not null default true,
+  created_at timestamptz not null default now()
+);
+alter table public.bar_ingredients enable row level security;
+drop policy if exists "Anyone can view available bar ingredients" on public.bar_ingredients;
+create policy "Anyone can view available bar ingredients"
+on public.bar_ingredients for select to anon, authenticated using (is_available = true);
+drop policy if exists "Staff manage bar ingredients" on public.bar_ingredients;
+create policy "Staff manage bar ingredients"
+on public.bar_ingredients for all to authenticated
+using (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active))
+with check (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active));
+
+create table if not exists public.bar_reservations (
+  id uuid primary key default gen_random_uuid(),
+  guest_name text not null,
+  contact text not null,
+  reservation_date date not null,
+  reservation_time time not null,
+  party_size integer not null check (party_size between 1 and 30),
+  notes text,
+  status text not null default 'requested' check (status in ('requested','confirmed','declined')),
+  created_at timestamptz not null default now()
+);
+alter table public.bar_reservations enable row level security;
+drop policy if exists "Guests can request reservations" on public.bar_reservations;
+create policy "Guests can request reservations"
+on public.bar_reservations for insert to anon, authenticated with check (true);
+drop policy if exists "Staff manage reservations" on public.bar_reservations;
+create policy "Staff manage reservations"
+on public.bar_reservations for all to authenticated
+using (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active))
+with check (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active));
