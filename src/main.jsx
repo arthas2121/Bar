@@ -57,13 +57,44 @@ function App() {
     return () => { alive = false; supabase.removeChannel(channel); };
   }, [isAdmin, session]);
 
+  // Customer devices only retrieve their own order status using an unguessable tracking token.
+  useEffect(() => {
+    if (isAdmin || !supabase) return;
+    const tracked = orders.filter(o => o.trackingToken && typeof o.id === 'string');
+    if (!tracked.length) return;
+    let alive = true;
+    const refreshStatuses = async () => {
+      const updates = await Promise.all(tracked.map(async order => {
+        const { data, error } = await supabase.rpc('get_customer_order_status', {
+          p_order_id: order.id,
+          p_tracking_token: order.trackingToken
+        });
+        if (error || !data || !data.length) return null;
+        return { id: order.id, status: data[0].status };
+      }));
+      if (!alive) return;
+      const byId = new Map(updates.filter(Boolean).map(x => [x.id, x.status]));
+      if (!byId.size) return;
+      setOrders(current => {
+        const next = current.map(o => byId.has(o.id) ? {...o, status: byId.get(o.id)} : o);
+        localStorage.setItem('bar-orders', JSON.stringify(next));
+        return next;
+      });
+    };
+    refreshStatuses();
+    const timer = setInterval(refreshStatuses, 5000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [isAdmin, orders.length]);
+
   const submit = async () => {
     if (!count) return;
     const lines = menu.filter(x => cart[x.id]).map(x => ({id:x.id,name:x.name,zh:x.zh,qty:cart[x.id],price:x.price}));
-    const order = { id: Date.now(), table_number: String(table), items: lines, total, status: 'received' };
+    const orderId = crypto.randomUUID();
+    const trackingToken = crypto.randomUUID() + crypto.randomUUID();
+    const order = { id: orderId, trackingToken: supabase ? trackingToken : null, table_number: String(table), items: lines, total, status: 'received' };
     if (supabase) {
       setBusy(true);
-      const {error} = await supabase.from('orders').insert({table_number:String(table),items:lines,total,status:'received'});
+      const {error} = await supabase.from('orders').insert({id:orderId,tracking_token:trackingToken,table_number:String(table),items:lines,total,status:'received'});
       setBusy(false);
       if (error) { setNotice(t('Could not send order: ','订单提交失败：') + error.message); return; }
       setNotice(t('Order sent to the bar! Pay at the counter.','订单已发送到吧台，请到吧台付款。'));
@@ -93,7 +124,7 @@ function App() {
     <header className="top"><div className="brand"><div className="brandmark"><Wine size={21}/></div><div><b>THE POUR HOUSE</b><small>{t('GOOD DRINKS. GOOD COMPANY.','好酒相伴，美好时光。')}</small></div></div><button className="lang" onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}><Languages size={17}/>{lang === 'en' ? '中文' : 'English'}</button></header>
     <main><section className="welcome"><div className="eyebrow">{t('WELCOME IN','欢迎光临')}</div><h1>{t('Your table,','您的餐桌，')}<em>{t('your order.','您的点单。')}</em></h1><p>{t('Explore our cocktail menu and order when you’re ready.','浏览鸡尾酒菜单，准备好后即可下单。')}</p><div className="tabletag">{t('TABLE','桌号')} <strong>#{table}</strong></div></section>
     <nav className="tabs"><button className={tab==='menu'?'active':''} onClick={()=>setTab('menu')}><Wine size={17}/>{t('Cocktails','鸡尾酒')}</button><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/>{t('My orders','我的订单')}{orders.length>0&&<span className="dot">{orders.length}</span>}</button></nav>
-    {tab==='menu' ? <><div className="sectionhead"><div><div className="eyebrow">{t('MIXED TO PERFECTION','匠心调制')}</div><h2>{t('Cocktail menu','鸡尾酒菜单')}</h2></div><span className="muted">{t('Prices in USD','美元计价')}</span></div><div className="menu">{menu.map(x=><article className="item" key={x.id}><div className="drinkicon">{x.emoji}</div><div className="iteminfo"><h3>{t(x.name,x.zh)}</h3><p>{t(x.desc,x.zhDesc)}</p><b>{money(x.price)}</b></div><div className="quantity">{cart[x.id]?<><button onClick={()=>remove(x.id)}><Minus size={15}/></button><strong>{cart[x.id]}</strong><button onClick={()=>add(x.id)}><Plus size={15}/></button></>:<button className="add" onClick={()=>add(x.id)}><Plus size={17}/></button>}</div></article>)}</div>{count>0&&<div className="checkout"><div><small>{t('YOUR ORDER','您的订单')}</small><strong>{count} {t('items','件商品')} · {money(total)}</strong></div><button disabled={busy} onClick={submit}>{busy?t('Sending…','提交中…'):t('Place order','提交订单')}<span>→</span></button></div>}</> : <><div className="sectionhead"><div><div className="eyebrow">{t('AT YOUR PACE','随时查看')}</div><h2>{t('My orders','我的订单')}</h2></div></div>{sent&&<div className="success"><CheckCircle2 size={19}/>{notice}</div>}{orders.length===0?<div className="empty"><ShoppingBag size={30}/><h3>{t('No demo orders yet','暂无本机演示订单')}</h3><p>{t('Submitted demo orders on this device show up here.','本设备提交的演示订单会显示在这里。')}</p><button onClick={()=>setTab('menu')}>{t('Browse cocktails','浏览鸡尾酒')}</button></div>:orders.map(o=><article className="ordercard" key={o.id}><div className="orderhead"><b>#{String(o.id).slice(-5)} · {t('Table','桌号')} {o.table_number}</b><span><Clock3 size={14}/>{statusLabel(o.status)}</span></div>{o.items.map((l,i)=><p key={i}>{l.qty} × {t(l.name,l.zh)}</p>)}<strong>{money(o.total)}</strong></article>)}</>}
+    {tab==='menu' ? <><div className="sectionhead"><div><div className="eyebrow">{t('MIXED TO PERFECTION','匠心调制')}</div><h2>{t('Cocktail menu','鸡尾酒菜单')}</h2></div><span className="muted">{t('Prices in USD','美元计价')}</span></div><div className="menu">{menu.map(x=><article className="item" key={x.id}><div className="drinkicon">{x.emoji}</div><div className="iteminfo"><h3>{t(x.name,x.zh)}</h3><p>{t(x.desc,x.zhDesc)}</p><b>{money(x.price)}</b></div><div className="quantity">{cart[x.id]?<><button onClick={()=>remove(x.id)}><Minus size={15}/></button><strong>{cart[x.id]}</strong><button onClick={()=>add(x.id)}><Plus size={15}/></button></>:<button className="add" onClick={()=>add(x.id)}><Plus size={17}/></button>}</div></article>)}</div>{count>0&&<div className="checkout"><div><small>{t('YOUR ORDER','您的订单')}</small><strong>{count} {t('items','件商品')} · {money(total)}</strong></div><button disabled={busy} onClick={submit}>{busy?t('Sending…','提交中…'):t('Place order','提交订单')}<span>→</span></button></div>}</> : <><div className="sectionhead"><div><div className="eyebrow">{t('AT YOUR PACE','随时查看')}</div><h2>{t('My orders','我的订单')}</h2></div></div>{sent&&<div className="success"><CheckCircle2 size={19}/>{notice}</div>}{orders.length===0?<div className="empty"><ShoppingBag size={30}/><h3>{t('No demo orders yet','暂无本机演示订单')}</h3><p>{t('Submitted demo orders on this device show up here.','本设备提交的演示订单会显示在这里。')}</p><button onClick={()=>setTab('menu')}>{t('Browse cocktails','浏览鸡尾酒')}</button></div>:orders.map(o=><article className="ordercard" key={o.id}><div className="orderhead"><b>#{String(o.id).slice(-5)} · {t('Table','桌号')} {o.table_number}</b><span><Clock3 size={14}/>{statusLabel(o.status)}</span></div>{o.items.map((l,i)=><p key={i}>{l.qty} × {t(l.name,l.zh)}</p>)}<strong>{money(o.total)}</strong>{o.trackingToken&&<div className="trackinghint">{t('Order status updates automatically every few seconds.','订单状态每几秒自动更新。')}</div>}</article>)}</>}
     {notice&&!sent&&<div className="notice">{notice}</div>}
     <footer>{t('Please enjoy responsibly. Payment is made at the bar.','请理性饮酒。订单请到吧台付款。')}<br/>© THE POUR HOUSE</footer></main>
   </div>;
