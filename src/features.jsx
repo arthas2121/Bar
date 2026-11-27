@@ -74,3 +74,12 @@ export function InventoryPanel({supabase}) {
     <div className="inventory-list">{items.map(item=><div className="inventory-row" key={item.id}><span><b>{item.name}</b><small>{item.category}{item.notes?' · '+item.notes:''}</small></span><button onClick={()=>toggle(item)}>{item.is_available?'Mark out of stock':'Mark available'}</button><button onClick={()=>remove(item.id)}>Delete</button></div>)}</div>
   </section>;
 }
+
+export function ReservationsAdmin({supabase}) {
+  const [rows,setRows]=useState([]);
+  const [message,setMessage]=useState('');
+  const load=async()=>{const {data,error}=await supabase.from('bar_reservations').select('*').order('created_at',{ascending:false});if(error)setMessage(error.message);else setRows(data||[]);};
+  useEffect(()=>{if(supabase)load();},[supabase]);
+  const update=async(id,status)=>{const {error}=await supabase.from('bar_reservations').update({status}).eq('id',id);if(error)setMessage(error.message);else load();};
+  return <section className="inventory-panel"><div className="eyebrow">GUEST BOOKINGS</div><h2>Reservation requests</h2>{message&&<p>{message}</p>}{rows.length===0?<p>No reservation requests yet.</p>:rows.map(r=><article className="ordercard" key={r.id}><div className="orderhead"><b>{r.guest_name} · {r.party_size} guests</b><span>{r.status}</span></div><p>{r.reservation_date} at {String(r.reservation_time).slice(0,5)} · {r.contact}</p>{r.notes&&<p>{r.notes}</p>}<div className="statusactions"><button onClick={()=>update(r.id,'confirmed')}>Confirm</button><button onClick={()=>update(r.id,'declined')}>Decline</button></div></article>)}</section>;
+}
