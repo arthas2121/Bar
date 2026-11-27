@@ -41,6 +41,14 @@ with check (exists (select 1 from public.staff_users s where s.user_id = auth.ui
 -- add that user's UUID here using the SQL Editor:
 -- insert into public.staff_users (user_id) values ('PASTE-STAFF-AUTH-USER-UUID');
 
+
+-- Allow active staff members to clear the shared order queue.
+drop policy if exists "Approved staff can delete orders" on public.orders;
+create policy "Approved staff can delete orders"
+on public.orders for delete
+to authenticated
+using (exists (select 1 from public.staff_users s where s.user_id = auth.uid() and s.is_active));
+
 -- Enable Realtime for the staff order queue.
 alter publication supabase_realtime add table public.orders;
 
