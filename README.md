@@ -33,3 +33,17 @@ Fill in the two Supabase values in `.env` to enable shared orders.
 
 ## Current limitations
 The cocktail names, descriptions, and prices in `src/main.jsx` are sample content. Replace them with the venue's actual cocktail list and prices. The QR URL pattern works now, but you still need to generate/print one QR code per table and deploy the site. Supabase setup and deployment are not completed automatically by this repository update.
+
+
+## Reservations and DYOD setup
+
+The latest customer UI includes a reservation request form and a Design Your Own Drink questionnaire. Staff can manage reservation requests and the ingredient inventory at `/?admin=1`.
+
+1. In Supabase Dashboard → SQL Editor, run the updated `supabase/schema.sql` from this repository. This creates `bar_reservations` and `bar_ingredients` with row-level security.
+2. In Supabase Dashboard → Edge Functions, deploy the function in `supabase/functions/generate-dyod/index.ts` with the function name `generate-dyod`.
+3. In Supabase Edge Function secrets, add `OPENAI_API_KEY`. Keep this key server-side only; never add it to Vercel frontend environment variables.
+4. Sign in to the staff dashboard, add your available ingredients, and test a DYOD creation and reservation request.
+
+DYOD sends the guest's mood/personality/flavour answers and the currently available inventory to the secure Edge Function. The function asks the AI to create a recipe using only the supplied inventory and validates the ingredient names before returning it. Reservation requests are stored in Supabase and visible to signed-in staff.
+
+The reservation form currently collects a guest name, phone/email, date, time, party size and optional notes. It submits a request; staff must confirm it in the dashboard. It does not yet check live seating capacity or send automatic confirmation messages.
