@@ -101,7 +101,7 @@ export function DYODPanel({supabase,lang='en',onOrder}) {
       <div className="dyod-tags"><span>{translations[answers.mood]||answers.mood}</span><span>{translations[answers.taste]||answers.taste}</span><span>{translations[answers.strength]||answers.strength}</span></div>
       <div className="dyod-recipe-block"><h4>{recipeLang==='zh'?'配方材料':'INGREDIENTS'}</h4><ul>{(result.ingredients||[]).map((i,n)=><li key={n}><span>{recipeText(i.name_en||i.name,i.name_zh)}</span><b>{i.amount}</b></li>)}</ul></div>
       <div className="dyod-recipe-block"><h4>{recipeLang==='zh'?'制作方法':'THE METHOD'}</h4><p>{recipeText(result.method_en||result.method,result.method_zh)}</p>{(result.glassware_en||result.glassware)&&<p className="dyod-glassware"><b>{recipeLang==='zh'?'建议杯型':'SERVE IN'}:</b> {recipeText(result.glassware_en||result.glassware,result.glassware_zh)}</p>}</div>
-      <small>{recipeLang==='zh'?'请将配方展示给调酒师，实际供应情况以吧台为准。':'Show this recipe to your bartender. Final availability is confirmed at the bar.'}</small>
+      <small>{recipeLang==='zh'?'把这份配方展示给家庭吧台主人。':'Show this recipe to your home-bar host.'}</small>
       <button type="button" className="dyod-order" onClick={()=>onOrder?.({...result,display_language:recipeLang})}>{recipeLang==='zh'?'点这杯酒':'Order this drink'} →</button></div>
     </article>}
     <p className="dyod-footnote">{zh?'每次创作都会实时读取后台全部有货原料，并从中挑选合适搭配。':'Every creation reads the full, latest available inventory and selects a compatible combination.'}</p>
