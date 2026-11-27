@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import { ShoppingBag, Plus, Minus, ClipboardList, Wine, CheckCircle2, Clock3, Languages, LogIn, RefreshCw } from 'lucide-react';
 import './style.css';
+import './ambience.css';
 
 const menu = [
   { id: 1, category: 'Cocktails', name: 'Old Fashioned', zh: '古典鸡尾酒', desc: 'Bourbon, bitters, sugar, orange', zhDesc: '波本威士忌、苦精、糖与橙皮', price: 14, emoji: '🥃' },
