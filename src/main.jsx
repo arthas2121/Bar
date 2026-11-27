@@ -68,9 +68,9 @@ function App() {
       if (error) { setNotice(t('Could not send order: ','订单提交失败：') + error.message); return; }
       setNotice(t('Order sent to the bar! Pay at the counter.','订单已发送到吧台，请到吧台付款。'));
     } else {
-      const next = [order,...orders]; setOrders(next); localStorage.setItem('bar-orders',JSON.stringify(next));
       setNotice(t('Demo order saved on this device. Connect Supabase for shared live orders.','演示订单已保存在本设备。连接 Supabase 后才能跨设备实时共享。'));
     }
+    const next = [order,...orders]; setOrders(next); localStorage.setItem('bar-orders',JSON.stringify(next));
     setCart({}); setSent(true); setTab('orders');
   };
 
