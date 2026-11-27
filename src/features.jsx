@@ -43,15 +43,16 @@ export function DYODPanel({supabase,lang='en'}) {
     if(fnError||!data?.recipe){setError(zh?'AI 调酒师暂时不可用，请稍后再试。':'The AI mixologist is not configured yet. Please try again later.');setBusy(false);return;}
     setResult(data.recipe);setBusy(false);
   };
+  const translations={'Adventurous':'喜欢尝鲜、爱冒险','Romantic':'浪漫、感性','Playful':'活泼、有趣','Calm':'平静、放松','Mysterious':'神秘、深沉','Celebratory':'开心、庆祝时刻','I prefer not to say':'不想透露','Prefer not to say':'不想透露','Aries':'白羊座','Taurus':'金牛座','Gemini':'双子座','Cancer':'巨蟹座','Leo':'狮子座','Virgo':'处女座','Libra':'天秤座','Scorpio':'天蝎座','Sagittarius':'射手座','Capricorn':'摩羯座','Aquarius':'水瓶座','Pisces':'双鱼座','Sour':'酸爽','Sweet':'偏甜','Bitter':'微苦/苦韵','Balanced':'酸甜苦平衡','Herbal':'草本香气','Smoky':'烟熏风味','Light':'清爽、酒感轻','Medium':'酒感适中','Spirit-forward':'酒味浓郁'};
   const fields=[
     ['mood',zh?'今晚的心情':'Your mood',['Adventurous','Romantic','Playful','Calm','Mysterious','Celebratory']],
-    ['mbti','MBTI',['I prefer not to say','INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP']],
-    ['zodiac',zh?'星座':'Zodiac sign',['Prefer not to say','Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']],
-    ['taste',zh?'最喜欢的味道':'Flavour preference',['Sour','Sweet','Bitter','Balanced','Herbal','Smoky']],
-    ['strength',zh?'酒感偏好':'Strength',['Light','Medium','Spirit-forward']]
+    ['mbti','MBTI（性格类型）',['I prefer not to say','INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP']],
+    ['zodiac',zh?'你的星座':'Zodiac sign',['Prefer not to say','Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces']],
+    ['taste',zh?'你喜欢的味道':'Flavour preference',['Sour','Sweet','Bitter','Balanced','Herbal','Smoky']],
+    ['strength',zh?'你喜欢的酒感':'Strength',['Light','Medium','Spirit-forward']]
   ];
-  return <section className="dyod-section" id="dyod"><div className="eyebrow">A LITTLE YOU, A LITTLE MAGIC</div><h2>Design Your Own Drink</h2><p>{zh?'回答几个关于心情与口味的问题，让 AI 为你创作一杯独一无二的鸡尾酒。':'Tell us your mood and flavour preferences. Our AI mixologist will create a cocktail just for you.'}</p>
-    <div className="dyod-grid">{fields.map(([key,label,options])=><label key={key}>{label}<select value={answers[key]} onChange={e=>update(key,e.target.value)}>{options.map(v=><option key={v} value={v}>{v}</option>)}</select></label>)}</div>
+  return <section className="dyod-section" id="dyod"><div className="eyebrow">{zh?'专属于你的风味创作':'A LITTLE YOU, A LITTLE MAGIC'}</div><h2>{zh?'设计你的专属鸡尾酒':'Design Your Own Drink'}</h2><p>{zh?'回答几个关于心情与口味的问题，让 AI 为你创作一杯独一无二的鸡尾酒。':'Tell us your mood and flavour preferences. Our AI mixologist will create a cocktail just for you.'}</p>
+    <div className="dyod-grid">{fields.map(([key,label,options])=><label key={key}>{label}<select value={answers[key]} onChange={e=>update(key,e.target.value)}>{options.map(v=><option key={v} value={v}>{zh?(translations[v]||v):v}</option>)}</select></label>)}</div>
     <button className="dyod-generate" onClick={create} disabled={busy}>{busy?(zh?'创作中…':'Creating…'):(zh?'生成我的专属鸡尾酒':'Create my cocktail')} ✨</button>
     {error&&<p className="form-message">{error}</p>}
     {result&&<article className="dyod-result"><div className="eyebrow">MADE JUST FOR YOU</div><h3>{result.name}</h3><p>{result.story}</p><h4>{zh?'配方材料':'Ingredients'}</h4><ul>{(result.ingredients||[]).map((i,n)=><li key={n}>{i.amount} {i.name}</li>)}</ul><h4>{zh?'制作方法':'Method'}</h4><p>{result.method}</p><small>{zh?'请将配方展示给调酒师，实际供应情况以吧台为准。':'Show this recipe to your bartender. Final availability is confirmed at the bar.'}</small></article>}
