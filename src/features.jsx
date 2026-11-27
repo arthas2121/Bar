@@ -122,16 +122,20 @@ const categoryNames = {
 export function InventoryPanel({supabase}) {
   const [items,setItems]=useState([]);
   const [form,setForm]=useState({name:'',category:'Base spirit',notes:''});
+  const [editingId,setEditingId]=useState(null);
+  const [editForm,setEditForm]=useState({name:'',category:'Base spirit',notes:''});
   const [message,setMessage]=useState('');
   const load=async()=>{const {data,error}=await supabase.from('bar_ingredients').select('*').order('name');if(!error)setItems(data||[]);else setMessage(error.message);};
   useEffect(()=>{if(supabase)load();},[supabase]);
   const add=async e=>{e.preventDefault();const {error}=await supabase.from('bar_ingredients').insert({...form,is_available:true});if(error)setMessage(error.message);else{setForm({name:'',category:'Base spirit',notes:''});setMessage('原料已添加。');load();}};
+  const startEdit=item=>{setEditingId(item.id);setEditForm({name:item.name||'',category:item.category||'Other',notes:item.notes||''});setMessage('');};
+  const saveEdit=async e=>{e.preventDefault();const {error}=await supabase.from('bar_ingredients').update({name:editForm.name.trim(),category:editForm.category,notes:editForm.notes.trim()}).eq('id',editingId);if(error)setMessage(error.message);else{setEditingId(null);setMessage('原料信息已更新。');load();}};
   const toggle=async item=>{const {error}=await supabase.from('bar_ingredients').update({is_available:!item.is_available}).eq('id',item.id);if(error)setMessage(error.message);else load();};
   const remove=async id=>{if(!window.confirm('确定删除这项原料吗？'))return;const {error}=await supabase.from('bar_ingredients').delete().eq('id',id);if(error)setMessage(error.message);else{setMessage('原料已删除。');load();}};
   return <section className="inventory-panel"><div className="eyebrow">DYOD · 酒吧库存</div><h2>原料库存管理</h2><p>添加酒吧现有的基酒、利口酒、调味材料、果汁和装饰配料。DYOD 只会使用标记为有货的原料。</p>
     <form className="ingredient-form" onSubmit={add}><input placeholder="原料名称" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/><select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{Object.entries(categoryNames).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select><input placeholder="品牌或风味备注（选填）" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}/><button>添加原料</button></form>
     {message&&<p className="form-message">{message}</p>}
-    <div className="inventory-list">{items.map(item=><div className="inventory-row" key={item.id}><span><b>{item.name}</b><small>{categoryNames[item.category]||item.category}{item.notes?' · '+item.notes:''}</small></span><button onClick={()=>toggle(item)}>{item.is_available?'标记为缺货':'标记为有货'}</button><button onClick={()=>remove(item.id)}>删除</button></div>)}</div>
+    <div className="inventory-list">{items.map(item=><div className="inventory-row" key={item.id}>{editingId===item.id?<form className="ingredient-form inventory-edit-form" onSubmit={saveEdit}><input placeholder="原料名称" value={editForm.name} onChange={e=>setEditForm({...editForm,name:e.target.value})} required/><select value={editForm.category} onChange={e=>setEditForm({...editForm,category:e.target.value})}>{Object.entries(categoryNames).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select><input placeholder="品牌或风味备注（选填）" value={editForm.notes} onChange={e=>setEditForm({...editForm,notes:e.target.value})}/><button type="submit">保存修改</button><button type="button" onClick={()=>setEditingId(null)}>取消</button></form>:<><span><b>{item.name}</b><small>{categoryNames[item.category]||item.category}{item.notes?' · '+item.notes:''}</small></span><button onClick={()=>startEdit(item)}>修改</button><button onClick={()=>toggle(item)}>{item.is_available?'标记为缺货':'标记为有货'}</button><button onClick={()=>remove(item.id)}>删除</button></>}</div>)}</div>
   </section>;
 }
 
