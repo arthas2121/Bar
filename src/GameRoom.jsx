@@ -41,8 +41,10 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
   };
   useEffect(()=>{
     loadLobby();
+    const lobbyTimer=setInterval(loadLobby,5000);
     const saved=JSON.parse(localStorage.getItem('ace-game-session')||'null');
     if(saved?.room_id&&saved?.player_token){setToken(saved.player_token);setHostToken(saved.host_token||'');loadRoom(saved.room_id);}
+    return()=>clearInterval(lobbyTimer);
   },[]);
   useEffect(()=>{
     if(!room?.id)return;
