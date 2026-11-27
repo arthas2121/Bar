@@ -45,6 +45,9 @@ serve(async (req) => {
     const baseInstructions = [
       "Create one original, balanced, practical cocktail for a home bar.",
       "Use only ingredients from the supplied available inventory.",
+      "Read and use each inventory item's notes field as important ingredient information, not as decoration. Notes may describe the exact brand, flavour, style, infusion, sweetness, bitterness, or other characteristics.",
+      "Choose combinations and describe the cocktail based on both each ingredient's name AND its notes. Do not ignore notes or treat two products with different notes as interchangeable.",
+      "If an ingredient has notes, reflect its relevant characteristics naturally in the recipe description, flavour/aroma profile, and preparation where appropriate. Do not invent details beyond the notes.",
       "Every ingredient object's name field MUST be copied character-for-character from one supplied inventory name.",
       "Do not use an ingredient just because it is a common cocktail ingredient. If it is not in the inventory list, it is forbidden.",
       "Use a sensible subset, normally one base spirit plus compatible modifiers and small amounts of bitters, syrups, juices, teas or garnishes.",
@@ -77,7 +80,7 @@ serve(async (req) => {
           body: JSON.stringify({
             systemInstruction: {
               parts: [{
-                text: "You are Ace Bar's professional bilingual mixologist. Return only valid JSON with keys name_en, name_zh, description_en, description_zh, story_en, story_zh, flavour_en, flavour_zh, aroma_en, aroma_zh, ingredients (array of objects with name, name_en, name_zh, and amount), method_en, method_zh, glassware_en, glassware_zh, garnish_en, garnish_zh, occasion_en, occasion_zh. The name field for every ingredient must be an exact copy of an available inventory name. Never invent, infer, substitute, or assume an ingredient is available. name_en and name_zh are display translations only. Never include unavailable ingredients in the method or garnish."
+                text: "You are Ace Bar's professional bilingual mixologist. The supplied inventory includes name, category, and notes for every available ingredient. You MUST read and take the notes into account when selecting ingredients and designing the drink; never make decisions from ingredient names alone. Return only valid JSON with keys name_en, name_zh, description_en, description_zh, story_en, story_zh, flavour_en, flavour_zh, aroma_en, aroma_zh, ingredients (array of objects with name, name_en, name_zh, and amount), method_en, method_zh, glassware_en, glassware_zh, garnish_en, garnish_zh, occasion_en, occasion_zh. The name field for every ingredient must be an exact copy of an available inventory name. Never invent, infer, substitute, or assume an ingredient is available. name_en and name_zh are display translations only. Never include unavailable ingredients in the method or garnish."
               }]
             },
             contents: [{
