@@ -27,12 +27,14 @@ export function ReservationPanel({supabase, lang='en'}) {
   </section>;
 }
 
-export function DYODPanel({supabase,lang='en'}) {
+export function DYODPanel({supabase,lang='en',onOrder}) {
   const zh=lang==='zh';
   const [answers,setAnswers]=useState({mood:'Adventurous',mbti:'',zodiac:'',taste:'Balanced',strength:'Medium'});
   const [result,setResult]=useState(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
+  const [recipeLang,setRecipeLang]=useState(lang);
+  const recipeText=(en,zh)=>recipeLang==='zh'?(zh||en):(en||zh);
   const update=(key,value)=>setAnswers(a=>({...a,[key]:value}));
   const create=async()=>{
     setBusy(true);setError('');setResult(null);
@@ -51,6 +53,7 @@ export function DYODPanel({supabase,lang='en'}) {
       }
       if(!data?.recipe) throw new Error(data?.error || (zh?'AI 没有返回配方，请检查库存和服务配置。':'The AI returned no recipe. Please check inventory and function settings.'));
       setResult({...data.recipe,inventoryCount:data.inventory_count});
+      setRecipeLang(lang);
     } catch(err) {
       console.error('DYOD generation failed:',err);
       setError(err?.message || (zh?'生成失败，请稍后重试。':'Generation failed. Please try again.'));
@@ -70,7 +73,18 @@ export function DYODPanel({supabase,lang='en'}) {
     <div className="dyod-grid">{fields.map(([key,label,options])=><label key={key}>{label}<select value={answers[key]} onChange={e=>update(key,e.target.value)}>{options.map(v=><option key={v} value={v}>{zh?(translations[v]||v):v}</option>)}</select></label>)}</div>
     <button className="dyod-generate" onClick={create} disabled={busy}>{busy?(zh?'创作中…':'Creating…'):(zh?'生成我的专属鸡尾酒':'Create my cocktail')} ✨</button>
     {error&&<p className="form-message">{error}</p>}
-    {result&&<article className="dyod-result"><div className="eyebrow">{zh?'专属创作 · ACE BAR':'MADE JUST FOR YOU · ACE BAR'}</div><h3>{result.name}</h3><p>{result.story}</p><h4>{zh?'配方材料':'Ingredients'}</h4><ul>{(result.ingredients||[]).map((i,n)=><li key={n}>{i.amount} {i.name}</li>)}</ul><h4>{zh?'制作方法':'Method'}</h4><p>{result.method}</p><small>{zh?'请将配方展示给调酒师，实际供应情况以吧台为准。':'Show this recipe to your bartender. Final availability is confirmed at the bar.'}</small></article>}
+    {result&&<article className="dyod-result">
+      <div className="eyebrow">{zh?'专属创作 · ACE BAR':'MADE JUST FOR YOU · ACE BAR'}</div>
+      <div className="dyod-language"><button type="button" className={recipeLang==='en'?'active':''} onClick={()=>setRecipeLang('en')}>English</button><button type="button" className={recipeLang==='zh'?'active':''} onClick={()=>setRecipeLang('zh')}>中文</button></div>
+      {result.image_url&&<img className="dyod-drink-image" src={result.image_url} alt={recipeText(result.name_en||result.name,result.name_zh)}/>}
+      <h3>{recipeText(result.name_en||result.name,result.name_zh)}</h3><p>{recipeText(result.story_en||result.story,result.story_zh)}</p>
+      <h4>{recipeLang==='zh'?'配方材料':'Ingredients'}</h4>
+      <ul>{(result.ingredients||[]).map((i,n)=><li key={n}>{i.amount} {recipeText(i.name_en||i.name,i.name_zh)}</li>)}</ul>
+      <h4>{recipeLang==='zh'?'制作方法':'Method'}</h4><p>{recipeText(result.method_en||result.method,result.method_zh)}</p>
+      {(result.glassware_en||result.glassware)&&<p><b>{recipeLang==='zh'?'杯型':'Glassware'}:</b> {recipeText(result.glassware_en||result.glassware,result.glassware_zh)}</p>}
+      <small>{recipeLang==='zh'?'请将配方展示给调酒师，实际供应情况以吧台为准。':'Show this recipe to your bartender. Final availability is confirmed at the bar.'}</small>
+      <button type="button" className="dyod-order" onClick={()=>onOrder?.({...result,display_language:recipeLang})}>{recipeLang==='zh'?'点这杯酒':'Order this drink'} →</button>
+    </article>}
     <p className="dyod-footnote">{zh?'每次创作都会实时读取后台全部有货原料，并从中挑选合适搭配。':'Every creation reads the full, latest available inventory and selects a compatible combination.'}</p>
   </section>;
 }
