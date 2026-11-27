@@ -1,0 +1,46 @@
+/* Warm, atmospheric bar backdrop */
+body{
+  background:
+    radial-gradient(ellipse at 12% 18%,rgba(196,145,75,.15),transparent 34%),
+    radial-gradient(ellipse at 88% 42%,rgba(48,91,61,.12),transparent 38%),
+    linear-gradient(180deg,#f3f0e7 0%,#f8f7f1 48%,#eeeee5 100%);
+  background-attachment:fixed;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.42;
+  background:
+    radial-gradient(circle at 8% 12%,rgba(211,157,82,.18),transparent 17rem),
+    radial-gradient(circle at 92% 28%,rgba(75,111,77,.13),transparent 20rem),
+    repeating-linear-gradient(115deg,rgba(70,57,37,.018) 0 1px,transparent 1px 5px);
+}
+.brand-hero{
+  isolation:isolate;
+  background:
+    linear-gradient(90deg,rgba(10,29,20,.92) 0%,rgba(16,43,29,.78) 48%,rgba(22,39,27,.32) 100%),
+    linear-gradient(0deg,rgba(12,24,17,.25),rgba(12,24,17,.25)),
+    url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1800&q=85') center 52%/cover,
+    #173b2a;
+  box-shadow:0 24px 55px rgba(28,42,29,.18),inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.brand-hero::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 76% 20%,rgba(235,174,91,.3),transparent 32%),linear-gradient(180deg,transparent 65%,rgba(7,20,13,.35));
+}
+.hero-art{z-index:1}
+.brand-panel{
+  box-shadow:0 12px 30px rgba(35,58,39,.055);
+  background:linear-gradient(145deg,rgba(255,255,250,.96),rgba(231,238,227,.94));
+}
+.event-panel{background:linear-gradient(145deg,#f4eddd,#e9e0cc)}
+.visit-panel{
+  background:
+    linear-gradient(105deg,rgba(18,53,34,.96),rgba(35,76,49,.92)),
+    url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=75') center/cover;
+  box-shadow:0 16px 36px rgba(24,53,34,.16);
+}
+.item{background:rgba(255,255,255,.32);padding-left:12px;padding-right:12px;border-radius:10px}
+.item:hover{background:rgba(255,255,255,.72)}
+@media(max-width:650px){
+  .brand-hero{background-position:center,center,58% center,center}
+  .item{padding-left:8px;padding-right:8px}
+}
