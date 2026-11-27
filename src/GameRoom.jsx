@@ -21,6 +21,10 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
   const [rounds,setRounds]=useState([]);
   const [token,setToken]=useState('');
   const [hostToken,setHostToken]=useState('');
+  const [playerId,setPlayerId]=useState('');
+  const [myDice,setMyDice]=useState([]);
+  const [bidCount,setBidCount]=useState(1);
+  const [bidFace,setBidFace]=useState(2);
   const [message,setMessage]=useState('');
   const [busy,setBusy]=useState(false);
   const [guess,setGuess]=useState('higher');
@@ -29,17 +33,17 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
   const [lastResult,setLastResult]=useState(null);
   const tr=(en,cn)=>zh?cn:en;
   const loadLobby=async()=>{const {data,error}=await supabase.rpc('game_list_waiting_rooms');if(!error)setLobbyRooms(data||[]);};
-  const loadRoom=async id=>{
-    const {data,error}=await supabase.rpc('game_get_room',{p_room:id});
+  const loadRoom=async (id,sessionToken=token)=>{
+    const {data,error}=await supabase.rpc('game_get_room',{p_room:id,p_token:sessionToken||null});
     if(error||!data?.room){setMessage(tr('Could not load room. Please refresh.','无法读取房间，请刷新页面。'));return;}
-    setRoom(data.room);setPlayers(data.players||[]);setRounds(data.rounds||[]);
+    setRoom(data.room);setPlayers(data.players||[]);setRounds(data.rounds||[]);setPlayerId(data.player_id||'');setMyDice(data.my_dice||[]);
     if(data.room.game_state?.last_result)setLastResult(data.room.game_state.last_result);
   };
   useEffect(()=>{
     loadLobby();
     const lobbyTimer=setInterval(loadLobby,5000);
     let saved=null;try{saved=JSON.parse(localStorage.getItem('ace-game-session')||'null');}catch{localStorage.removeItem('ace-game-session');}
-    if(saved?.room_id&&saved?.player_token){setToken(saved.player_token);setHostToken(saved.host_token||'');loadRoom(saved.room_id);}
+    if(saved?.room_id&&saved?.player_token){setToken(saved.player_token);setHostToken(saved.host_token||'');setPlayerId(saved.player_id||'');loadRoom(saved.room_id,saved.player_token);}
     return()=>clearInterval(lobbyTimer);
   },[]);
   useEffect(()=>{
@@ -49,7 +53,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
   },[room?.id]);
   const saveSession=data=>{
     const s={...data};localStorage.setItem('ace-game-session',JSON.stringify(s));
-    setToken(s.player_token||'');setHostToken(s.host_token||'');loadRoom(s.room_id);
+    setToken(s.player_token||'');setHostToken(s.host_token||'');setPlayerId(s.player_id||'');loadRoom(s.room_id,s.player_token||'');
   };
   const createRoom=async e=>{
     e?.preventDefault();if(!supabase){setMessage(tr('Game service is not connected.','游戏服务尚未连接。'));return;}
@@ -66,15 +70,15 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
     setBusy(true);const {error}=await supabase.rpc('game_host_start',{p_room:room.id,p_token:hostToken});setBusy(false);
     setMessage(error?error.message:tr('Game started!','游戏开始！'));loadRoom(room.id);
   };
-  const play=async action=>{
-    setBusy(true);const {data,error}=await supabase.rpc('game_play_round',{p_room:room.id,p_token:token,p_action:action,p_guess:guess});setBusy(false);
-    if(error){setMessage(error.message);return;}setLastResult(data);loadRoom(room.id);
+  const play=async (action,value=guess)=>{
+    setBusy(true);const {data,error}=await supabase.rpc('game_play_round',{p_room:room.id,p_token:token,p_action:action,p_guess:value});setBusy(false);
+    if(error){setMessage(error.message);return;}setLastResult(data);await loadRoom(room.id,token);
   };
   const finish=async()=>{
     setBusy(true);const {error}=await supabase.rpc('game_host_finish',{p_room:room.id,p_token:hostToken});setBusy(false);
     if(error)setMessage(error.message);loadRoom(room.id);
   };
-  const leave=()=>{localStorage.removeItem('ace-game-session');setRoom(null);setPlayers([]);setRounds([]);setToken('');setHostToken('');setLastResult(null);setMessage('');};
+  const leave=()=>{localStorage.removeItem('ace-game-session');setRoom(null);setPlayers([]);setRounds([]);setToken('');setHostToken('');setPlayerId('');setMyDice([]);setLastResult(null);setMessage('');};
   if(!supabase)return <section className="game-room-panel"><h2>Game Room</h2><p>{tr('Connect Supabase to enable multiplayer games.','连接 Supabase 后即可使用多人游戏。')}</p></section>;
   return <section className="game-room-panel" id="game-room">
     <div className="eyebrow">ACE BAR · PLAY TOGETHER</div>
@@ -106,9 +110,30 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
       {room.status==='waiting'&&hostToken&&<button disabled={busy||players.length<2} onClick={startGame}>{tr('Start game','开始游戏')}</button>}
       {room.status==='playing'&&<div className="game-play-area">
         <h3>{tr('Round','第')} {room.game_state?.round||1}</h3>
-        {['higher_lower','red_black'].includes(room.game_type)&&<label>{tr('Your guess','你的猜测')}<select value={guess} onChange={e=>setGuess(e.target.value)}>{(room.game_type==='red_black'?[['red',tr('Red','红色')],['black',tr('Black','黑色')]]:[['higher',tr('Higher','更大')],['lower',tr('Lower','更小')]]).map(x=><option key={x[0]} value={x[0]}>{x[1]}</option>)}</select></label>}
-        <button disabled={busy} onClick={()=>play('play')}>{room.game_type.includes('dice')||room.game_type==='high_low'?tr('Roll dice','掷骰子'):room.game_type==='higher_lower'||room.game_type==='red_black'?tr('Draw next card','翻开下一张牌'):tr('Draw a card','抽一张牌')}</button>
-        {lastResult&&<div className="game-last-result"><b>{tr('Latest result','最新结果')}</b><pre>{JSON.stringify(lastResult,null,2)}</pre></div>}
+        {room.game_type==='liars_dice'?(()=>{
+          const order=[...players].sort((a,b)=>new Date(a.joined_at)-new Date(b.joined_at)||a.id.localeCompare(b.id));
+          const turn=order[room.game_state?.current_turn||0];
+          const bid=room.game_state?.bid;
+          const myTurn=turn?.id===playerId;
+          const bidPlayer=bid&&players.find(p=>p.id===bid.player_id);
+          return <div className="liars-dice-board">
+            <div className="liars-turn">{tr('Current turn','当前行动')}：<b>{turn?.display_name||'—'}</b>{myTurn&&<em> · {tr('Your turn','轮到你了')}</em>}</div>
+            <div className="liars-my-dice"><b>{tr('Your private dice','你的骰子（仅你可见）')}</b><div className="liars-dice-faces">{myDice.length?myDice.map((d,i)=><span key={i}>{['⚀','⚁','⚂','⚃','⚄','⚅'][d-1]}</span>):<small>{tr('Dice appear when the host starts the game.','主持人开始游戏后显示骰子。')}</small>}</div></div>
+            <div className="liars-current-bid"><b>{tr('Current bid','当前叫价')}</b><p>{bid?tr('At least','至少')+' '+bid.count+' × '+tr('face','点数')+' '+bid.face+' · '+(bidPlayer?.display_name||''):tr('No bid yet — make the opening bid.','还没有叫价，请先开价。')}</p></div>
+            {myTurn&&<div className="liars-actions">
+              <label>{tr('Quantity','数量')}<select value={bidCount} onChange={e=>setBidCount(Number(e.target.value))}>{Array.from({length:Math.max(1,players.length*5)},(_,i)=>i+1).map(n=><option key={n} value={n}>{n}</option>)}</select></label>
+              <label>{tr('Dice face','骰面')}<select value={bidFace} onChange={e=>setBidFace(Number(e.target.value))}>{[1,2,3,4,5,6].map(n=><option key={n} value={n}>{n} · {['⚀','⚁','⚂','⚃','⚄','⚅'][n-1]}</option>)}</select></label>
+              <button disabled={busy} onClick={()=>play('bid',JSON.stringify({count:bidCount,face:bidFace}))}>{tr('Make a higher bid','提高叫价')}</button>
+              {bid&&<button className="game-challenge" disabled={busy} onClick={()=>play('challenge','')}>{tr('Call bluff · Reveal dice','质疑 · 揭晓骰子')}</button>}
+            </div>}
+            {!myTurn&&<p>{tr('Wait for your turn. You can follow the bids above.','请等待轮到你，留意上方的叫价。')}</p>}
+            {lastResult?.type==='challenge'&&<div className="game-last-result"><b>{tr('Last challenge result','上轮质疑结果')}</b><p>{lastResult.bidder} {tr('bid','叫价')} {lastResult.bid?.count} × {lastResult.bid?.face}; {tr('actual count','实际数量')} {lastResult.actual_count}. {tr('Round winner','本轮胜者')}: <strong>{lastResult.winner}</strong></p><div className="liars-reveal">{(lastResult.revealed_dice||[]).map((x,i)=><p key={i}>{x.player}: {(x.dice||[]).map(d=>['⚀','⚁','⚂','⚃','⚄','⚅'][d-1]).join(' ')}</p>)}</div></div>}
+          </div>;
+        })():<>
+          {['higher_lower','red_black'].includes(room.game_type)&&<label>{tr('Your guess','你的猜测')}<select value={guess} onChange={e=>setGuess(e.target.value)}>{(room.game_type==='red_black'?[['red',tr('Red','红色')],['black',tr('Black','黑色')]]:[['higher',tr('Higher','更大')],['lower',tr('Lower','更小')]]).map(x=><option key={x[0]} value={x[0]}>{x[1]}</option>)}</select></label>}
+          <button disabled={busy} onClick={()=>play('play')}>{room.game_type==='high_low'?tr('Roll dice','掷骰子'):room.game_type==='higher_lower'||room.game_type==='red_black'?tr('Draw next card','翻开下一张牌'):tr('Draw a card','抽一张牌')}</button>
+          {lastResult&&<div className="game-last-result"><b>{tr('Latest result','最新结果')}</b><p>{lastResult.player||''} · {lastResult.prompt||lastResult.challenge||lastResult.message||''} {lastResult.roll?lastResult.roll:''}</p></div>}
+        </>}
         {hostToken&&<button className="game-finish" disabled={busy} onClick={finish}>{tr('End game & show results','结束游戏并公布结果')}</button>}
       </div>}
       {room.status==='finished'&&<div className="game-leaderboard"><h3>{tr('This game leaderboard','本局排行榜')}</h3>{[...players].sort((a,b)=>b.score-a.score).map((p,i)=><div className="game-player" key={p.id}><b>#{i+1} {p.display_name}</b><strong>{p.score} pts</strong></div>)}</div>}
