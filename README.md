@@ -1,4 +1,4 @@
-# The Pour House — Cocktail QR Ordering
+# Ace Bar — Cocktail QR Ordering
 
 A modern, mobile-first bilingual (English / 中文) cocktail menu and table-ordering starter built with React + Vite.
 
