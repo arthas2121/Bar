@@ -4,7 +4,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.game_rooms (
   id uuid primary key default gen_random_uuid(),
   code text not null unique,
-  host_token text not null,
+  host_token_hash text not null,
   host_name text not null,
   game_type text not null check (game_type in ('liars_dice','high_low','higher_lower','red_black','kings_cup','dare_or_drink')),
   status text not null default 'waiting' check (status in ('waiting','playing','finished')),
@@ -49,7 +49,7 @@ begin
  if p_game not in ('liars_dice','high_low','higher_lower','red_black','kings_cup','dare_or_drink') then raise exception 'Invalid game'; end if;
  if p_max not between 2 and 12 then raise exception 'Player limit must be 2–12'; end if;
  c:=upper(substr(encode(gen_random_bytes(5),'hex'),1,6));
- insert into game_rooms(code,host_token,host_name,game_type,max_players) values(c,ht,trim(p_name),p_game,p_max) returning * into r;
+ insert into game_rooms(code,host_token_hash,host_name,game_type,max_players) values(c,encode(digest(ht,'sha256'),'hex'),trim(p_name),p_game,p_max) returning * into r;
  insert into game_players(room_id,player_token,display_name,role) values(r.id,pt,trim(p_name),'host');
  return jsonb_build_object('room_id',r.id,'code',r.code,'player_token',pt,'host_token',ht);
 end $$;
@@ -71,7 +71,7 @@ returns jsonb language plpgsql security definer set search_path=public as $$
 declare r game_rooms;
 begin
  select * into r from game_rooms where id=p_room for update;
- if not found or r.host_token<>p_token then raise exception 'Only the host can start this game'; end if;
+ if not found or r.host_token_hash<>encode(digest(p_token,'sha256'),'hex') then raise exception 'Only the host can start this game'; end if;
  if (select count(*) from game_players where room_id=p_room)<2 then raise exception 'At least two players are required'; end if;
  update game_rooms set status='playing',game_state=jsonb_build_object('round',1,'current_turn',0,'scores',jsonb_build_object()) where id=p_room;
  return jsonb_build_object('ok',true);
@@ -112,7 +112,7 @@ end $$;
 create or replace function public.game_host_finish(p_room uuid,p_token text)
 returns jsonb language plpgsql security definer set search_path=public as $$
 begin
- if not exists(select 1 from game_rooms where id=p_room and host_token=p_token) then raise exception 'Only the host can finish this game'; end if;
+ if not exists(select 1 from game_rooms where id=p_room and host_token_hash=encode(digest(p_token,'sha256'),'hex')) then raise exception 'Only the host can finish this game'; end if;
  update game_rooms set status='finished' where id=p_room;
  return jsonb_build_object('ok',true);
 end $$;
