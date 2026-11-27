@@ -187,3 +187,18 @@ body::before{
 @media(max-width:620px){.game-room-columns{grid-template-columns:1fr}.game-room-panel{padding:18px;margin:20px 0}.game-room-top strong{font-size:26px}}
 
 .game-open-rooms{margin:18px 0;padding:16px;border:1px solid rgba(174,139,83,.22);border-radius:14px;background:rgba(255,255,255,.5)}.game-open-rooms h3{margin:0 0 10px;color:#173b2a}.game-open-room{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(52,70,56,.1)}.game-open-room:last-child{border-bottom:0}.game-open-room b,.game-open-room small{display:block}.game-open-room b{letter-spacing:.12em;color:#173b2a}.game-open-room small{margin-top:4px;color:#7b806f;font-size:12px}.game-open-room button{padding:8px 14px;font-size:12px}
+
+
+/* Staff dashboard: compact vertical feature navigation */
+.staff-workspace{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start;margin:24px 0 40px}
+.staff-sidebar{position:sticky;top:18px;display:grid;gap:7px;padding:14px;border:1px solid rgba(174,139,83,.24);border-radius:16px;background:linear-gradient(160deg,#f8f6ee,#eeede2)}
+.staff-sidebar-title{padding:8px 10px 12px;color:#8a795d;font-size:11px;font-weight:800;letter-spacing:.14em}
+.staff-sidebar button{display:flex;align-items:center;gap:11px;width:100%;padding:12px 13px;border:0;border-radius:10px;background:transparent;color:#344638;text-align:left;font:inherit;font-weight:650;cursor:pointer}
+.staff-sidebar button span{width:22px;text-align:center}
+.staff-sidebar button:hover,.staff-sidebar button.active{background:#173b2a;color:#fff}
+.staff-workspace-content{min-width:0}
+.staff-workspace-content>.game-room-panel{max-width:none;margin:0}
+.staff-feature-heading{margin:4px 0 18px}
+.staff-feature-heading h2{margin:6px 0;color:#173b2a;font-family:Georgia,serif;font-size:30px}
+.staff-feature-heading p{color:#73786d}
+@media(max-width:760px){.staff-workspace{grid-template-columns:1fr;gap:14px}.staff-sidebar{position:static;display:flex;overflow-x:auto;gap:6px;padding:9px}.staff-sidebar-title{display:none}.staff-sidebar button{width:auto;white-space:nowrap;flex:0 0 auto;padding:10px 12px}.staff-workspace-content{width:100%}}
