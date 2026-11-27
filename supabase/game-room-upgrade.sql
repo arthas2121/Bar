@@ -93,6 +93,7 @@ begin
    begin newbid:=p_guess::jsonb; exception when others then raise exception 'Enter a valid bid'; end;
    if coalesce((newbid->>'count')::integer,0)<1 or coalesce((newbid->>'count')::integer,0)>players_count*5 or coalesce((newbid->>'face')::integer,0) not between 1 and 6 then raise exception 'Bid must be within the dice and face limits'; end if;
    if bid is not null and not ((newbid->>'count')::integer>(bid->>'count')::integer or ((newbid->>'count')::integer=(bid->>'count')::integer and (newbid->>'face')::integer>(bid->>'face')::integer)) then raise exception 'Your bid must be higher than the previous bid'; end if;
+   newbid:=newbid||jsonb_build_object('player_id',p.id);
    update public.game_rooms set game_state=game_state||jsonb_build_object('bid',newbid,'current_turn',((coalesce((game_state->>'current_turn')::integer,0)+1)%players_count)) where id=p_room;
    return jsonb_build_object('type','bid','bid',newbid,'player_id',p.id,'player_name',p.display_name,'next_turn',(coalesce((r.game_state->>'current_turn')::integer,0)+1)%players_count);
   elsif p_action='challenge' then
