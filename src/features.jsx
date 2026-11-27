@@ -60,19 +60,25 @@ export function DYODPanel({supabase,lang='en'}) {
   </section>;
 }
 
+const categoryNames = {
+  'Base spirit':'基酒','Liqueur':'利口酒','Vermouth / Aperitif':'味美思／开胃酒',
+  'Bitters':'苦精','Syrup / Sweetener':'糖浆／甜味剂','Juice / Mixer':'果汁／调饮',
+  'Tea / Infusion':'茶／浸泡材料','Garnish':'装饰配料','Other':'其他'
+};
+
 export function InventoryPanel({supabase}) {
   const [items,setItems]=useState([]);
   const [form,setForm]=useState({name:'',category:'Base spirit',notes:''});
   const [message,setMessage]=useState('');
   const load=async()=>{const {data,error}=await supabase.from('bar_ingredients').select('*').order('name');if(!error)setItems(data||[]);else setMessage(error.message);};
   useEffect(()=>{if(supabase)load();},[supabase]);
-  const add=async e=>{e.preventDefault();const {error}=await supabase.from('bar_ingredients').insert({...form,is_available:true});if(error)setMessage(error.message);else{setForm({name:'',category:'Base spirit',notes:''});setMessage('Ingredient added.');load();}};
+  const add=async e=>{e.preventDefault();const {error}=await supabase.from('bar_ingredients').insert({...form,is_available:true});if(error)setMessage(error.message);else{setForm({name:'',category:'Base spirit',notes:''});setMessage('原料已添加。');load();}};
   const toggle=async item=>{const {error}=await supabase.from('bar_ingredients').update({is_available:!item.is_available}).eq('id',item.id);if(error)setMessage(error.message);else load();};
-  const remove=async id=>{const {error}=await supabase.from('bar_ingredients').delete().eq('id',id);if(error)setMessage(error.message);else load();};
-  return <section className="inventory-panel"><div className="eyebrow">DYOD · YOUR BAR STOCK</div><h2>Ingredient inventory</h2><p>Add every spirit, liqueur, modifier, mixer and garnish. DYOD can only use available items.</p>
-    <form className="ingredient-form" onSubmit={add}><input placeholder="Ingredient name" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/><select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{['Base spirit','Liqueur','Vermouth / Aperitif','Bitters','Syrup / Sweetener','Juice / Mixer','Tea / Infusion','Garnish','Other'].map(v=><option key={v} value={v}>{v==='Base spirit'?'基酒':v}</option>)}</select><input placeholder="Brand or tasting notes (optional)" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}/><button>Add ingredient</button></form>
+  const remove=async id=>{if(!window.confirm('确定删除这项原料吗？'))return;const {error}=await supabase.from('bar_ingredients').delete().eq('id',id);if(error)setMessage(error.message);else{setMessage('原料已删除。');load();}};
+  return <section className="inventory-panel"><div className="eyebrow">DYOD · 酒吧库存</div><h2>原料库存管理</h2><p>添加酒吧现有的基酒、利口酒、调味材料、果汁和装饰配料。DYOD 只会使用标记为有货的原料。</p>
+    <form className="ingredient-form" onSubmit={add}><input placeholder="原料名称" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/><select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{Object.entries(categoryNames).map(([v,label])=><option key={v} value={v}>{label}</option>)}</select><input placeholder="品牌或风味备注（选填）" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}/><button>添加原料</button></form>
     {message&&<p className="form-message">{message}</p>}
-    <div className="inventory-list">{items.map(item=><div className="inventory-row" key={item.id}><span><b>{item.name}</b><small>{(item.category==='Base spirit'?'基酒':item.category)}{item.notes?' · '+item.notes:''}</small></span><button onClick={()=>toggle(item)}>{item.is_available?'Mark out of stock':'Mark available'}</button><button onClick={()=>remove(item.id)}>Delete</button></div>)}</div>
+    <div className="inventory-list">{items.map(item=><div className="inventory-row" key={item.id}><span><b>{item.name}</b><small>{categoryNames[item.category]||item.category}{item.notes?' · '+item.notes:''}</small></span><button onClick={()=>toggle(item)}>{item.is_available?'标记为缺货':'标记为有货'}</button><button onClick={()=>remove(item.id)}>删除</button></div>)}</div>
   </section>;
 }
 
@@ -82,5 +88,6 @@ export function ReservationsAdmin({supabase}) {
   const load=async()=>{const {data,error}=await supabase.from('bar_reservations').select('*').order('created_at',{ascending:false});if(error)setMessage(error.message);else setRows(data||[]);};
   useEffect(()=>{if(supabase)load();},[supabase]);
   const update=async(id,status)=>{const {error}=await supabase.from('bar_reservations').update({status}).eq('id',id);if(error)setMessage(error.message);else load();};
-  return <section className="inventory-panel"><div className="eyebrow">GUEST BOOKINGS</div><h2>Reservation requests</h2>{message&&<p>{message}</p>}{rows.length===0?<p>No reservation requests yet.</p>:rows.map(r=><article className="ordercard" key={r.id}><div className="orderhead"><b>{r.guest_name} · {r.party_size} guests</b><span>{r.status}</span></div><p>{r.reservation_date} at {String(r.reservation_time).slice(0,5)} · {r.contact}</p>{r.notes&&<p>{r.notes}</p>}<div className="statusactions"><button onClick={()=>update(r.id,'confirmed')}>Confirm</button><button onClick={()=>update(r.id,'declined')}>Decline</button></div></article>)}</section>;
+  const statusText=s=>({pending:'待处理',confirmed:'已确认',declined:'已婉拒'})[s]||s;
+  return <section className="inventory-panel"><div className="eyebrow">顾客预约</div><h2>预约申请管理</h2>{message&&<p>{message}</p>}{rows.length===0?<p>目前还没有预约申请。</p>:rows.map(r=><article className="ordercard" key={r.id}><div className="orderhead"><b>{r.guest_name} · {r.party_size} 位客人</b><span>{statusText(r.status)}</span></div><p>{r.reservation_date} {String(r.reservation_time).slice(0,5)} · {r.contact}</p>{r.notes&&<p>备注：{r.notes}</p>}<div className="statusactions"><button onClick={()=>update(r.id,'confirmed')}>确认预约</button><button onClick={()=>update(r.id,'declined')}>婉拒预约</button></div></article>)}</section>;
 }
