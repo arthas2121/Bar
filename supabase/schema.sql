@@ -43,3 +43,25 @@ with check (exists (select 1 from public.staff_users s where s.user_id = auth.ui
 
 -- Enable Realtime for the staff order queue.
 alter publication supabase_realtime add table public.orders;
+
+
+-- Customer order tracking: expose only status for an order when its private token matches.
+alter table public.orders add column if not exists tracking_token text;
+
+create or replace function public.get_customer_order_status(
+  p_order_id uuid,
+  p_tracking_token text
+)
+returns table(id uuid, table_number text, status text, created_at timestamptz)
+language sql
+security definer
+set search_path = public
+as $$
+  select o.id, o.table_number, o.status, o.created_at
+  from public.orders o
+  where o.id = p_order_id
+    and o.tracking_token = p_tracking_token;
+$$;
+
+revoke all on function public.get_customer_order_status(uuid, text) from public;
+grant execute on function public.get_customer_order_status(uuid, text) to anon, authenticated;
