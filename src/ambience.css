@@ -259,3 +259,13 @@ body::before{
 .game-join-panel .game-join button{margin-bottom:0}
 @media(max-width:760px){.game-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.game-home-card{min-height:195px;padding:17px!important}}
 @media(max-width:520px){.game-home-grid{grid-template-columns:1fr}.game-home-card{min-height:155px}.game-lobby-profile{grid-template-columns:1fr}.game-join-panel .game-join{grid-template-columns:1fr}.game-join-panel .game-join h3{grid-column:auto}}
+
+
+/* Game Room round-by-round activity */
+.game-round-history{margin-top:18px;padding:16px 18px;border:1px solid rgba(174,139,83,.22);border-radius:14px;background:rgba(255,255,255,.58)}
+.game-round-history h3{margin:0 0 10px;color:#173b2a;font-family:Georgia,serif;font-size:20px}
+.game-history-item{display:grid;grid-template-columns:82px minmax(0,1fr);gap:12px;align-items:start;padding:10px 0;border-bottom:1px solid rgba(52,70,56,.1)}
+.game-history-item:last-child{border-bottom:0}
+.game-history-item>span{color:#987344;font-size:12px;font-weight:800;white-space:nowrap}
+.game-history-item p{margin:0;color:#4f5a4e;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+@media(max-width:520px){.game-history-item{grid-template-columns:62px minmax(0,1fr);gap:8px}}
