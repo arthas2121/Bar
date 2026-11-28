@@ -58,12 +58,15 @@ end $$;
 
 create or replace function public.game_host_start(p_room uuid,p_token text)
 returns jsonb language plpgsql security definer set search_path=public,extensions as $$
-declare r public.game_rooms; p record; n integer:=0; d integer[];
+declare r public.game_rooms; p record; n integer:=0; d integer[]; deck_cards text[];
 begin
  select * into r from public.game_rooms where id=p_room for update;
  if not found or r.host_token_hash<>encode(digest(p_token,'sha256'),'hex') then raise exception 'Only the host can start this game'; end if;
  if r.status<>'waiting' then raise exception 'Game has already started'; end if;
  if (select count(*) from public.game_players where room_id=p_room)<2 then raise exception 'At least two players are required'; end if;
+ if r.game_type in ('higher_lower','red_black','kings_cup') then
+  select array_agg(rank||suit order by random()) into deck_cards from unnest(array['A','2','3','4','5','6','7','8','9','10','J','Q','K']) rank cross join unnest(array['♠','♥','♦','♣']) suit;
+ end if;
  if r.game_type='liars_dice' then
   for p in select id from public.game_players where room_id=p_room order by joined_at,id loop
    d:=array[]::integer[];
@@ -71,13 +74,13 @@ begin
    insert into public.game_player_private(player_id,dice) values(p.id,d) on conflict(player_id) do update set dice=excluded.dice,updated_at=now();
   end loop;
  end if;
- update public.game_rooms set status='playing',game_state=jsonb_build_object('round',1,'current_turn',0,'bid',null,'last_result',null) where id=p_room;
+ update public.game_rooms set status='playing',game_state=jsonb_build_object('round',1,'current_turn',0,'bid',null,'last_result',null)||case when deck_cards is not null then jsonb_build_object('deck',to_jsonb(deck_cards),'deck_index',1) else '{}'::jsonb end where id=p_room;
  return jsonb_build_object('ok',true);
 end $$;
 
 create or replace function public.game_play_round(p_room uuid,p_token text,p_action text,p_guess text default null)
 returns jsonb language plpgsql security definer set search_path=public,extensions as $$
-declare r public.game_rooms; p public.game_players; players_count integer; turn_index integer; my_index integer; bid jsonb; newbid jsonb; actual integer:=0; bidder_id uuid; bidder_name text; challenger_name text; winner_id uuid; delta integer:=1; reveal jsonb; result jsonb; roundno integer; next_start integer:=0; d integer[]; rec record; val integer; deck text[]:=array['A','2','3','4','5','6','7','8','9','10','J','Q','K']; card text; nextcard text; correct boolean;
+declare r public.game_rooms; p public.game_players; players_count integer; turn_index integer; my_index integer; bid jsonb; newbid jsonb; actual integer:=0; bidder_id uuid; bidder_name text; challenger_name text; winner_id uuid; delta integer:=1; reveal jsonb; result jsonb; roundno integer; next_start integer:=0; d integer[]; rec record; val integer; deck text[]:=array['A','2','3','4','5','6','7','8','9','10','J','Q','K']; cards text[]; card text; nextcard text; card_idx integer; rank_now integer; rank_next integer; correct boolean;
 begin
  select * into r from public.game_rooms where id=p_room for update;
  if not found or r.status<>'playing' then raise exception 'Game is not active'; end if;
@@ -118,9 +121,18 @@ begin
   else raise exception 'Choose a bid or challenge'; end if;
  end if;
  if r.game_type in ('higher_lower','red_black') then
-  card:=deck[1+floor(random()*13)::integer]; nextcard:=deck[1+floor(random()*13)::integer];
-  correct:=case when r.game_type='red_black' then (p_guess='red' and nextcard in ('2','4','6','8','10','Q')) or (p_guess='black' and nextcard in ('A','3','5','7','9','J','K')) else (p_guess='higher' and array_position(deck,nextcard)>array_position(deck,card)) or (p_guess='lower' and array_position(deck,nextcard)<array_position(deck,card)) end;
-  result:=jsonb_build_object('player',p.display_name,'first_card',card,'next_card',nextcard,'guess',p_guess,'correct',correct);
+  cards:=array(select jsonb_array_elements_text(r.game_state->'deck'));
+  card_idx:=coalesce((r.game_state->>'deck_index')::integer,1);
+  if coalesce(array_length(cards,1),0)<52 or card_idx>51 then
+   select array_agg(rank||suit order by random()) into cards from unnest(deck) rank cross join unnest(array['♠','♥','♦','♣']) suit;
+   card_idx:=1;
+  end if;
+  card:=cards[card_idx]; nextcard:=cards[card_idx+1];
+  rank_now:=array_position(deck,replace(card,'♠','')); rank_now:=coalesce(rank_now,array_position(deck,replace(card,'♥',''))); rank_now:=coalesce(rank_now,array_position(deck,replace(card,'♦',''))); rank_now:=coalesce(rank_now,array_position(deck,replace(card,'♣','')));
+  rank_next:=array_position(deck,replace(nextcard,'♠','')); rank_next:=coalesce(rank_next,array_position(deck,replace(nextcard,'♥',''))); rank_next:=coalesce(rank_next,array_position(deck,replace(nextcard,'♦',''))); rank_next:=coalesce(rank_next,array_position(deck,replace(nextcard,'♣','')));
+  correct:=case when r.game_type='red_black' then (p_guess='red' and right(nextcard,1) in ('♥','♦')) or (p_guess='black' and right(nextcard,1) in ('♠','♣')) else (p_guess='higher' and rank_next>rank_now) or (p_guess='lower' and rank_next<rank_now) end;
+  result:=jsonb_build_object('player',p.display_name,'first_card',card,'next_card',nextcard,'guess',p_guess,'correct',correct,'message',case when rank_now=rank_next then 'Same rank' else '' end);
+  update public.game_rooms set game_state=game_state||jsonb_build_object('deck',to_jsonb(cards),'deck_index',card_idx+2) where id=p_room;
  elsif r.game_type='high_low' then
   val:=1+floor(random()*6)::integer; result:=jsonb_build_object('player',p.display_name,'roll',val,'message','You rolled a die');
  elsif r.game_type='kings_cup' then
