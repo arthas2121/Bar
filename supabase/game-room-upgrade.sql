@@ -136,7 +136,7 @@ begin
 end $$;
 
 create or replace function public.game_host_finish(p_room uuid,p_token text)
-returns jsonb language plpgsql security definer set search_path=public,extensions as $
+returns jsonb language plpgsql security definer set search_path=public,extensions as $$
 declare r public.game_rooms;
 begin
  select * into r from public.game_rooms where id=p_room for update;
@@ -144,7 +144,7 @@ begin
  if r.status<>'playing' then raise exception 'Only an active game can be finished'; end if;
  update public.game_rooms set status='finished' where id=p_room;
  return jsonb_build_object('ok',true);
-end $;
+end $$;
 
 revoke all on function public.game_list_waiting_rooms() from public;
 revoke all on function public.game_get_room(uuid,text) from public;
