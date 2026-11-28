@@ -134,9 +134,18 @@ begin
   result:=jsonb_build_object('player',p.display_name,'first_card',card,'next_card',nextcard,'guess',p_guess,'correct',correct,'message',case when rank_now=rank_next then 'Same rank' else '' end);
   update public.game_rooms set game_state=game_state||jsonb_build_object('deck',to_jsonb(cards),'deck_index',card_idx+2) where id=p_room;
  elsif r.game_type='high_low' then
-  val:=1+floor(random()*6)::integer; result:=jsonb_build_object('player',p.display_name,'roll',val,'message','You rolled a die');
+  val:=1+floor(random()*6)::integer; correct:=(p_guess='higher' and val>=4) or (p_guess='lower' and val<=3); result:=jsonb_build_object('player',p.display_name,'roll',val,'guess',p_guess,'correct',correct,'message','High is 4–6; Low is 1–3');
  elsif r.game_type='kings_cup' then
-  val:=1+floor(random()*13)::integer; result:=jsonb_build_object('player',p.display_name,'card',deck[val],'prompt',case val when 1 then 'Ace: Everyone points to a player' when 11 then 'Jack: Make a fun rule' when 12 then 'Queen: Ask a question' when 13 then 'King: Group challenge' else 'Number card: Share a fun story' end);
+  cards:=array(select jsonb_array_elements_text(r.game_state->'deck'));
+  card_idx:=coalesce((r.game_state->>'deck_index')::integer,1);
+  if coalesce(array_length(cards,1),0)<52 or card_idx>52 then
+   select array_agg(rank||suit order by random()) into cards from unnest(deck) as ranks(rank) cross join unnest(array['♠','♥','♦','♣']) as suits(suit);
+   card_idx:=1;
+  end if;
+  card:=cards[card_idx];
+  val:=array_position(deck,substring(card from '^(10|[2-9AJQK])'));
+  result:=jsonb_build_object('player',p.display_name,'card',card,'prompt',case val when 1 then 'Ace: Everyone points to a player' when 11 then 'Jack: Make a fun rule' when 12 then 'Queen: Ask a question' when 13 then 'King: Group challenge' else 'Number card: Share a fun story' end);
+  update public.game_rooms set game_state=game_state||jsonb_build_object('deck',to_jsonb(cards),'deck_index',card_idx+1) where id=p_room;
  else
   val:=1+floor(random()*6)::integer; result:=jsonb_build_object('player',p.display_name,'challenge',case val when 1 then 'Tell a funny story' when 2 then 'Do your best celebrity impression' when 3 then 'Give someone a genuine compliment' when 4 then 'Invent a cocktail name' when 5 then 'Share an unusual fact about yourself' else 'Let the group choose a harmless challenge' end);
  end if;
