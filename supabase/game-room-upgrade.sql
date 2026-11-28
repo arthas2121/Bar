@@ -88,7 +88,7 @@ begin
   select count(*) into players_count from public.game_players where room_id=p_room;
   select count(*) into my_index from (select id,row_number() over(order by joined_at,id)-1 idx from public.game_players where room_id=p_room) q where q.id=p.id and q.idx=coalesce((r.game_state->>'current_turn')::integer,0);
   if my_index=0 then raise exception 'It is not your turn'; end if;
-  bid:=r.game_state->'bid';
+  bid:=nullif(r.game_state->'bid','null'::jsonb);
   if p_action='bid' then
    begin newbid:=p_guess::jsonb; exception when others then raise exception 'Enter a valid bid'; end;
    if coalesce((newbid->>'count')::integer,0)<1 or coalesce((newbid->>'count')::integer,0)>players_count*5 or coalesce((newbid->>'face')::integer,0) not between 1 and 6 then raise exception 'Bid must be within the dice and face limits'; end if;
