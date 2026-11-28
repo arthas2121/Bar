@@ -105,7 +105,7 @@ begin
    select id,display_name into bidder_id,bidder_name from public.game_players where room_id=p_room and id=(bid->>'player_id')::uuid;
    challenger_name:=p.display_name;
    winner_id:=case when actual >= (bid->>'count')::integer then bidder_id else p.id end;
-   select (row_number() over(order by joined_at,id)-1)::integer into next_start from public.game_players where room_id=p_room and id=winner_id;
+   select idx into next_start from (select id,(row_number() over(order by joined_at,id)-1)::integer as idx from public.game_players where room_id=p_room) ordered_players where id=winner_id;
    update public.game_players set score=score+1 where id=winner_id;
    result:=jsonb_build_object('type','challenge','bid',bid,'actual_count',actual,'challenger',challenger_name,'bidder',bidder_name,'winner',case when winner_id=bidder_id then bidder_name else challenger_name end,'winner_id',winner_id,'revealed_dice',reveal);
    insert into public.game_rounds(room_id,round_number,game_type,result) values(p_room,roundno,r.game_type,result);
@@ -139,6 +139,7 @@ create or replace function public.game_host_finish(p_room uuid,p_token text)
 returns jsonb language plpgsql security definer set search_path=public,extensions as $$
 begin
  if not exists(select 1 from public.game_rooms where id=p_room and host_token_hash=encode(digest(p_token,'sha256'),'hex')) then raise exception 'Only the host can finish this game'; end if;
+ if not exists(select 1 from public.game_rooms where id=p_room and status='playing') then raise exception 'Only an active game can be finished'; end if;
  update public.game_rooms set status='finished' where id=p_room;
  return jsonb_build_object('ok',true);
 end $$;
