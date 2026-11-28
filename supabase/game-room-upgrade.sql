@@ -77,7 +77,7 @@ end $$;
 
 create or replace function public.game_play_round(p_room uuid,p_token text,p_action text,p_guess text default null)
 returns jsonb language plpgsql security definer set search_path=public,extensions as $$
-declare r public.game_rooms; p public.game_players; players_count integer; turn_index integer; my_index integer; bid jsonb; newbid jsonb; actual integer:=0; bidder_id uuid; bidder_name text; challenger_name text; winner_id uuid; delta integer:=1; reveal jsonb; result jsonb; roundno integer; d integer[]; rec record; val integer; deck text[]:=array['A','2','3','4','5','6','7','8','9','10','J','Q','K']; card text; nextcard text; correct boolean;
+declare r public.game_rooms; p public.game_players; players_count integer; turn_index integer; my_index integer; bid jsonb; newbid jsonb; actual integer:=0; bidder_id uuid; bidder_name text; challenger_name text; winner_id uuid; delta integer:=1; reveal jsonb; result jsonb; roundno integer; next_start integer:=0; d integer[]; rec record; val integer; deck text[]:=array['A','2','3','4','5','6','7','8','9','10','J','Q','K']; card text; nextcard text; correct boolean;
 begin
  select * into r from public.game_rooms where id=p_room for update;
  if not found or r.status<>'playing' then raise exception 'Game is not active'; end if;
@@ -105,6 +105,7 @@ begin
    select id,display_name into bidder_id,bidder_name from public.game_players where room_id=p_room and id=(bid->>'player_id')::uuid;
    challenger_name:=p.display_name;
    winner_id:=case when actual >= (bid->>'count')::integer then bidder_id else p.id end;
+   select (row_number() over(order by joined_at,id)-1)::integer into next_start from public.game_players where room_id=p_room and id=winner_id;
    update public.game_players set score=score+1 where id=winner_id;
    result:=jsonb_build_object('type','challenge','bid',bid,'actual_count',actual,'challenger',challenger_name,'bidder',bidder_name,'winner',case when winner_id=bidder_id then bidder_name else challenger_name end,'winner_id',winner_id,'revealed_dice',reveal);
    insert into public.game_rounds(room_id,round_number,game_type,result) values(p_room,roundno,r.game_type,result);
@@ -112,7 +113,7 @@ begin
     d:=array[]::integer[]; for i in 1..5 loop d:=array_append(d,1+floor(random()*6)::integer); end loop;
     update public.game_player_private set dice=d,updated_at=now() where player_id=rec.id;
    end loop;
-   update public.game_rooms set game_state=jsonb_build_object('round',roundno+1,'current_turn',0,'bid',null,'last_result',result) where id=p_room;
+   update public.game_rooms set game_state=jsonb_build_object('round',roundno+1,'current_turn',coalesce(next_start,0),'bid',null,'last_result',result) where id=p_room;
    return result;
   else raise exception 'Choose a bid or challenge'; end if;
  end if;
