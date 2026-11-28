@@ -86,21 +86,23 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
     <p>{tr('Gather around, invite your friends and let the games begin.','邀请朋友加入同一房间，开始今晚的小游戏。')}</p>
     <div className="game-room-notice">{tr('No betting. No cash prizes. Every challenge is optional.','不下注、不涉及现金奖励。所有挑战均可自愿选择。')}</div>
     {!room?<div className="game-room-entry">
-      <label>{tr('Your name','你的昵称')}<input value={name} onChange={e=>setName(e.target.value)} maxLength={40} placeholder="Alex"/></label>
-      <div className="game-room-columns">
-        <form className="game-create" onSubmit={createRoom}>
-          <h3>{tr('Create a room','创建房间')}</h3>
-          <div className="game-choice-wrap"><b className="game-choice-heading">{tr('Choose a game','选择游戏')}</b><div className="game-choice-grid">{GAMES.map(g=><button type="button" key={g[0]} className={'game-choice-card'+(game===g[0]?' selected':'')} aria-pressed={game===g[0]} onClick={()=>setGame(g[0])}><span className="game-choice-icon">{({'liars_dice':'🎲','high_low':'⚄','higher_lower':'🂡','red_black':'♥','kings_cup':'👑','dare_or_drink':'✨'})[g[0]]}</span><strong>{zh?g[2]:g[1]}</strong><small>{g[3]}</small><span className="game-choice-select">{game===g[0]?tr('Selected','已选择'):tr('Choose','选择')}</span></button>)}</div></div>
-          <label>{tr('Player limit','人数上限')}<select value={maxPlayers} onChange={e=>setMaxPlayers(Number(e.target.value))}>{[2,3,4,5,6,7,8,10,12].map(n=><option key={n} value={n}>{n}</option>)}</select></label>
-          <button disabled={busy}>{tr('Create game room','创建游戏房间')}</button>
-        </form>
-        <form className="game-join" onSubmit={joinRoom}>
-          <h3>{tr('Join with room code','输入房间码加入')}</h3>
-          <label>{tr('Room code','房间码')}<input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={6} placeholder="ACE028"/></label>
-          <button disabled={busy}>{tr('Join room','加入房间')}</button>
-        </form>
+      <div className="game-lobby-profile">
+        <label>{tr('Your name','你的昵称')}<input value={name} onChange={e=>setName(e.target.value)} maxLength={40} placeholder="Alex"/></label>
+        <label>{tr('Player limit','人数上限')}<select value={maxPlayers} onChange={e=>setMaxPlayers(Number(e.target.value))}>{[2,3,4,5,6,7,8,10,12].map(n=><option key={n} value={n}>{n}</option>)}</select></label>
       </div>
-      <div className="game-lobby-note">{tr('Scan the same Ace Bar QR code to open this lobby. Choose a waiting room or enter its code to join.','所有人扫描同一个 Ace Bar 二维码进入这里，再输入房间码加入朋友创建的游戏。')}</div>
+      <div className="game-home-heading"><h3>{tr('Choose your game','选择一款游戏')}</h3><p>{tr('Pick a game to create a room and invite your friends.','选择游戏，创建房间并邀请朋友加入。')}</p></div>
+      <div className="game-home-grid">{GAMES.map(g=><button type="button" key={g[0]} className={'game-home-card'+(game===g[0]?' selected':'')} aria-pressed={game===g[0]} onClick={()=>setGame(g[0])}>
+        <span className="game-home-icon">{({'liars_dice':'🎲','high_low':'⚄','higher_lower':'🂡','red_black':'♥','kings_cup':'👑','dare_or_drink':'✨'})[g[0]]}</span>
+        <strong>{zh?g[2]:g[1]}</strong><small>{g[3]}</small>
+        <span className="game-home-action">{game===g[0]?tr('Selected · Create room','已选择 · 创建房间'):tr('Select game','选择游戏')}</span>
+      </button>)}</div>
+      <button className="game-create-selected" disabled={busy||!name.trim()} onClick={createRoom}>{tr('Create room','创建房间')} · {zh?GAME_ZH[game]:GAME_LABEL[game]}</button>
+      <div className="game-join-panel"><form className="game-join" onSubmit={joinRoom}>
+        <h3>{tr('Join a friend’s room','加入朋友的房间')}</h3>
+        <label>{tr('Room code','房间码')}<input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={6} placeholder="ACE028"/></label>
+        <button disabled={busy}>{tr('Join room','加入房间')}</button>
+      </form></div>
+      <div className="game-lobby-note">{tr('Everyone can scan the same Ace Bar QR code to enter Game Room.','所有人扫描同一个 Ace Bar 二维码即可进入 Game Room。')}</div>
       <div className="game-open-rooms"><h3>{tr('Open rooms','正在等待的房间')}</h3>{lobbyRooms.length===0?<p>{tr('No rooms are waiting yet. Be the first to create one!','目前没有等待中的房间，创建一个吧！')}</p>:lobbyRooms.map(r=><div className="game-open-room" key={r.id}><div><b>{r.code}</b><small>{zh?GAME_ZH[r.game_type]:GAME_LABEL[r.game_type]} · {tr('Host','主持人')} {r.host_name}</small></div><button type="button" onClick={()=>setCode(r.code)}>{tr('Use code','使用房间码')}</button></div>)}</div>
     </div>:<div className="game-active-room">
       <div className="game-room-top"><div><small>{tr('ROOM CODE','房间码')}</small><strong>{room.code}</strong></div><span className={'game-status '+room.status}>{({waiting:tr('Waiting','等待中'),playing:tr('Playing','游戏中'),finished:tr('Finished','已结束')})[room.status]}</span></div>
