@@ -50,7 +50,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
     if(!room?.id)return;
     const timer=setInterval(()=>{loadRoom(room.id);loadLobby();},3000);
     return()=>clearInterval(timer);
-  },[room?.id]);
+  },[room?.id,token]);
   const saveSession=data=>{
     const s={...data};localStorage.setItem('ace-game-session',JSON.stringify(s));
     setToken(s.player_token||'');setHostToken(s.host_token||'');setPlayerId(s.player_id||'');loadRoom(s.room_id,s.player_token||'');
