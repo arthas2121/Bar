@@ -79,6 +79,14 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
     if(error)setMessage(error.message);loadRoom(room.id);
   };
   const leave=()=>{localStorage.removeItem('ace-game-session');setRoom(null);setPlayers([]);setRounds([]);setToken('');setHostToken('');setPlayerId('');setMyDice([]);setLastResult(null);setMessage('');};
+  const roundSummary=result=>{
+    if(!result)return '';
+    if(result.type==='challenge')return `${result.bidder||''} ${tr('bid','叫价')} ${result.bid?.count||''} × ${result.bid?.face||''}; ${tr('actual','实际')} ${result.actual_count??'—'} · ${tr('Winner','胜者')}: ${result.winner||'—'}`;
+    if(result.first_card)return `${result.player||''}: ${result.first_card} → ${result.next_card} · ${result.correct?tr('Correct','猜对'):tr('Incorrect','未猜中')}`;
+    if(result.card)return `${result.player||''}: ${result.card} · ${result.prompt||''}`;
+    if(result.roll)return `${result.player||''}: ${tr('rolled','掷出')} ${result.roll} · ${result.correct?tr('Correct','猜对'):tr('Incorrect','未猜中')}`;
+    return [result.player,result.challenge||result.message].filter(Boolean).join(' · ');
+  };
   if(!supabase)return <section className="game-room-panel"><h2>Game Room</h2><p>{tr('Connect Supabase to enable multiplayer games.','连接 Supabase 后即可使用多人游戏。')}</p></section>;
   return <section className="game-room-panel" id="game-room">
     <div className="eyebrow">ACE BAR · PLAY TOGETHER</div>
@@ -139,6 +147,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
         {hostToken&&<button className="game-finish" disabled={busy} onClick={finish}>{tr('End game & show results','结束游戏并公布结果')}</button>}
       </div>}
       {room.status==='finished'&&<div className="game-leaderboard"><h3>{tr('This game leaderboard','本局排行榜')}</h3>{[...players].sort((a,b)=>b.score-a.score).map((p,i)=><div className="game-player" key={p.id}><b>#{i+1} {p.display_name}</b><strong>{p.score} pts</strong></div>)}</div>}
+      {rounds.length>0&&<div className="game-round-history"><h3>{tr('Game history','游戏记录')}</h3>{rounds.slice(0,8).map((r,i)=><div className="game-history-item" key={r.id||i}><span>{tr('Round','第')} {r.round_number}</span><p>{roundSummary(r.result)}</p></div>)}</div>}
       <button className="game-leave" onClick={leave}>{tr('Leave room on this device','此设备退出房间')}</button>
     </div>}
     {message&&<p className="game-room-message" role="status">{message}</p>}
