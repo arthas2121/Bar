@@ -90,7 +90,7 @@ export function GameRoom({supabase,lang='en',guestName=''}) {
       <div className="game-room-columns">
         <form className="game-create" onSubmit={createRoom}>
           <h3>{tr('Create a room','创建房间')}</h3>
-          <label>{tr('Choose a game','选择游戏')}<select value={game} onChange={e=>setGame(e.target.value)}>{GAMES.map(g=><option key={g[0]} value={g[0]}>{zh?g[2]:g[1]} · {zh?g[3]:g[3]}</option>)}</select></label>
+          <div className="game-choice-wrap"><b className="game-choice-heading">{tr('Choose a game','选择游戏')}</b><div className="game-choice-grid">{GAMES.map(g=><button type="button" key={g[0]} className={'game-choice-card'+(game===g[0]?' selected':'')} aria-pressed={game===g[0]} onClick={()=>setGame(g[0])}><span className="game-choice-icon">{({'liars_dice':'🎲','high_low':'⚄','higher_lower':'🂡','red_black':'♥','kings_cup':'👑','dare_or_drink':'✨'})[g[0]]}</span><strong>{zh?g[2]:g[1]}</strong><small>{g[3]}</small><span className="game-choice-select">{game===g[0]?tr('Selected','已选择'):tr('Choose','选择')}</span></button>)}</div></div>
           <label>{tr('Player limit','人数上限')}<select value={maxPlayers} onChange={e=>setMaxPlayers(Number(e.target.value))}>{[2,3,4,5,6,7,8,10,12].map(n=><option key={n} value={n}>{n}</option>)}</select></label>
           <button disabled={busy}>{tr('Create game room','创建游戏房间')}</button>
         </form>
