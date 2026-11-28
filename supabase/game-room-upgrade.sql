@@ -136,13 +136,15 @@ begin
 end $$;
 
 create or replace function public.game_host_finish(p_room uuid,p_token text)
-returns jsonb language plpgsql security definer set search_path=public,extensions as $$
+returns jsonb language plpgsql security definer set search_path=public,extensions as $
+declare r public.game_rooms;
 begin
- if not exists(select 1 from public.game_rooms where id=p_room and host_token_hash=encode(digest(p_token,'sha256'),'hex')) then raise exception 'Only the host can finish this game'; end if;
- if not exists(select 1 from public.game_rooms where id=p_room and status='playing') then raise exception 'Only an active game can be finished'; end if;
+ select * into r from public.game_rooms where id=p_room for update;
+ if not found or r.host_token_hash<>encode(digest(p_token,'sha256'),'hex') then raise exception 'Only the host can finish this game'; end if;
+ if r.status<>'playing' then raise exception 'Only an active game can be finished'; end if;
  update public.game_rooms set status='finished' where id=p_room;
  return jsonb_build_object('ok',true);
-end $$;
+end $;
 
 revoke all on function public.game_list_waiting_rooms() from public;
 revoke all on function public.game_get_room(uuid,text) from public;
