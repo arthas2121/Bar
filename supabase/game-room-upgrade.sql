@@ -65,7 +65,7 @@ begin
  if r.status<>'waiting' then raise exception 'Game has already started'; end if;
  if (select count(*) from public.game_players where room_id=p_room)<2 then raise exception 'At least two players are required'; end if;
  if r.game_type in ('higher_lower','red_black','kings_cup') then
-  select array_agg(rank||suit order by random()) into deck_cards from unnest(array['A','2','3','4','5','6','7','8','9','10','J','Q','K']) rank cross join unnest(array['♠','♥','♦','♣']) suit;
+  select array_agg(rank||suit order by random()) into deck_cards from unnest(array['A','2','3','4','5','6','7','8','9','10','J','Q','K']) as ranks(rank) cross join unnest(array['♠','♥','♦','♣']) as suits(suit);
  end if;
  if r.game_type='liars_dice' then
   for p in select id from public.game_players where room_id=p_room order by joined_at,id loop
@@ -124,7 +124,7 @@ begin
   cards:=array(select jsonb_array_elements_text(r.game_state->'deck'));
   card_idx:=coalesce((r.game_state->>'deck_index')::integer,1);
   if coalesce(array_length(cards,1),0)<52 or card_idx>51 then
-   select array_agg(rank||suit order by random()) into cards from unnest(deck) rank cross join unnest(array['♠','♥','♦','♣']) suit;
+   select array_agg(rank||suit order by random()) into cards from unnest(deck) as ranks(rank) cross join unnest(array['♠','♥','♦','♣']) as suits(suit);
    card_idx:=1;
   end if;
   card:=cards[card_idx]; nextcard:=cards[card_idx+1];
